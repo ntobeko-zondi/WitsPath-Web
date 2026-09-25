@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="WitsPath route planner for Wits West Campus accessibility navigation."
+    />
+    <title>WitsPath</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Main application header">
+        <button
+          id="navToggle"
+          class="icon-button"
+          type="button"
+          aria-label="Open preferences"
+        >
+          ☰
+        </button>
+
+        <div class="brand" aria-label="WitsPath logo and title">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub">West Campus Access</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="contrastToggle" class="pill-button" type="button">
+            High contrast
+          </button>
+          <button id="languageButton" class="pill-button" type="button">
+            Language
+          </button>
+        </div>
+      </header>
+
+      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
+      <aside id="settingsDrawer" class="drawer" aria-label="Preferences panel">
+        <div class="drawer-header">
+          <h2>Preferences</h2>
+          <button id="closeDrawer" class="icon-button" type="button" aria-label="Close preferences">
+            ✕
+          </button>
+        </div>
+
+        <div class="drawer-section">
+          <label class="field" for="languageSelect">
+            <span>Language</span>
+            <select id="languageSelect" aria-label="Select language"></select>
+          </label>
+
+          <label class="checkbox-row" for="stepFreeOnly">
+            <input id="stepFreeOnly" type="checkbox" />
+            <span>Step-free route only</span>
+          </label>
+
+          <label class="checkbox-row" for="highContrastToggle">
+            <input id="highContrastToggle" type="checkbox" />
+            <span>High contrast</span>
+          </label>
+
+          <label class="field" for="textSizeSelect">
+            <span>Text size</span>
+            <select id="textSizeSelect" aria-label="Select text size">
+              <option value="small">Small</option>
+              <option value="default" selected>Default</option>
+              <option value="large">Large</option>
+              <option value="huge">Huge</option>
+            </select>
+          </label>
+        </div>
+      </aside>
+
+      <main class="layout">
+        <section class="panel route-panel" aria-labelledby="routeTitle">
+          <h2 id="routeTitle">Plan a route</h2>
+
+          <div class="route-fields">
+            <label class="field" for="fromSelect">
+              <span>From</span>
+              <select id="fromSelect" aria-label="Select starting location"></select>
+            </label>
+
+            <label class="field" for="toSelect">
+              <span>To</span>
+              <select id="toSelect" aria-label="Select destination"></select>
+            </label>
+          </div>
+
+          <div class="route-actions">
+            <button id="routeButton" class="primary-button" type="button">Find route</button>
+            <button id="swapButton" class="secondary-button" type="button">Swap</button>
+          </div>
+
+          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel map-panel" aria-labelledby="mapTitle">
+          <div class="map-header">
+            <div>
+              <p class="eyebrow">Current route</p>
+              <h2 id="mapTitle">Select a route</h2>
+            </div>
+
+            <div class="map-controls" aria-label="Map controls">
+              <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+              <button id="resetView" type="button" aria-label="Reset map view">Reset</button>
+              <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+            </div>
+          </div>
+
+          <div id="mapViewport" class="map-viewport" tabindex="0" aria-label="Wits West Campus map">
+            <div id="mapSurface" class="map-surface">
+              <img
+                id="campusMap"
+                src="app/src/main/res/drawable-nodpi/campusmap.jpeg"
+                alt="Wits West Campus map"
+              />
+              <svg id="routeOverlay" viewBox="0 0 647 717" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel guidance-panel" aria-labelledby="guidanceTitle">
+          <h2 id="guidanceTitle">Navigation</h2>
+          <p id="guidanceText" class="guidance-text">Choose your start and destination to begin.</p>
+          <ol id="stepsList" class="steps-list" aria-live="polite"></ol>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
