@@ -180,3 +180,5 @@ Live-trip follow-ups:
 - **Travel-time speeds.** Deliberately conservative: 0.8 m/s wheelchair, 1.1 m/s ambulatory, rounded up. The default profile is wheelchair.
 - **Shared links** expose only `from, to, distanceM, accessible, steps, createdAt, expiresAt`. They expire after 30 days and are revocable with a token kept in the creator's browser.
 - **Transcript export** is opt-in. Report content and mobility mentions are removed unless the user ticks the matching boxes. Mobility redaction is keyword-based and best-effort.
+
+The West Campus route planner uses a locally rendered SVG map and loads route data from `data/wits-west-map.json`. Dark mode is saved between visits, and step-by-step directions appear after starting navigation.
