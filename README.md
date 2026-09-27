@@ -8,6 +8,10 @@ Website for WitsPath, accessible indoor navigation for Wits University, with an 
 index.html, app/, css/, data/   existing route-planner site
 companion/                      companion widget (browser): chat UI, voice layer, share page script
 share.html                      public /share/{id} route-card page
+trip.html, track.html           live trip: sender page, and viewer page (/track/{id})
+tracking/                       live trip scripts, styles, map adapter (OpenStreetMap now, Google later)
+admin/                          campus places admin page (/admin/)
+vendor/leaflet-1.9.4/           map library (BSD-2 licence)
 functions/                      Cloud Function "companionMessage" (all /api/** routes)
   src/companion/                tool-use loop, system prompt, numeric grounding guard
   src/tools/                    tool contracts + handlers (find_place, get_route, ...)
@@ -23,23 +27,71 @@ firebase.json                   hosting + /api/** and /share/** rewrites
 firestore.companion.rules       rules to MERGE into the Android app's rules
 ```
 
-## Run locally
+## Getting started (run it on your machine)
+
+### One-time setup
+
+1. Install **Git** and **Node.js 22 or newer** (check with `node --version`).
+2. Clone the repo and switch to the branch with the companion and live trips (it isn't in `main` until PR #1 is merged):
+
+   ```bash
+   git clone https://github.com/ntobeko-zondi/WitsPath-Web.git
+   cd WitsPath-Web
+   git checkout feature/ai-companion
+   ```
+
+3. Install the server's packages:
+
+   ```bash
+   npm --prefix functions install
+   ```
+
+4. Create `functions/.secret.local` with your own keys. It is git-ignored and never deployed:
+
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ADMIN_API_TOKEN=any-long-random-text
+   # VULAVULA_API_KEY=...   optional
+   ```
+
+   Share keys through a password manager, never in the repo or in chat. Never put keys in `functions/.env`: Firebase deploys that file with the function.
+
+### Every time
 
 ```bash
-cd functions
-npm install
-npm test            # 41 deterministic tests, no API key needed
-npm run dev         # http://localhost:5173
+npm --prefix functions run dev
 ```
 
-For real replies, put secrets in `functions/.secret.local`. That file is git-ignored and never deployed:
+Open **http://localhost:5173**:
 
-```
-ANTHROPIC_API_KEY=...
-VULAVULA_API_KEY=...     # optional; without it voice input uses the browser
+| Page | URL |
+|---|---|
+| Main site + AI companion | `/` |
+| Share a live trip | `/trip.html` |
+| Pin campus places | `/admin/` (log in with your `ADMIN_API_TOKEN`) |
+
+Always open the site through this server. Double-clicking `index.html` or using VS Code Live Server won't work, because the pages need the server's `/api` routes.
+
+Before pushing, run the tests (no API key needed):
+
+```bash
+npm --prefix functions test
 ```
 
-Do **not** put keys in `functions/.env`: Firebase deploys that file with the function. The dev server defaults to `ROUTING_MODE=fixture`, which uses **placeholder** routes.
+### What works without keys
+
+| Missing | Effect |
+|---|---|
+| `ANTHROPIC_API_KEY` | Pages load, but the companion says it's unavailable |
+| `ADMIN_API_TOKEN` | The admin page is switched off |
+| `VULAVULA_API_KEY` | Voice input uses the browser's built-in recognition (Chrome/Edge) |
+
+### Things to know
+
+- **Data is per computer.** The dev server keeps chats, share links and trips in memory, and they disappear on restart. Pinned campus places are saved to `functions/.dev-data/campus-places.json` on your machine only. To share pins, send that file to teammates (same folder) until the shared Firebase project exists.
+- **Routes are placeholders.** Locally the companion can only route 5 hand-picked place pairs (`ROUTING_MODE=fixture`). Anything else answers "can't confirm a route". That's expected until the shared routing service exists.
+- **Testing on a phone needs HTTPS.** Browsers only allow GPS and the microphone on `localhost` or HTTPS. On a phone, `http://<laptop-IP>:5173` loads, but live trips and voice won't work. Use an HTTPS tunnel instead, e.g. `cloudflared tunnel --url http://localhost:5173` or ngrok, and open the address it prints.
+- **Port already in use?** In PowerShell: `$env:PORT=5174`, then start the server again.
 
 ## Deploy
 
