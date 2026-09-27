@@ -1,0 +1,188 @@
+/* Live trip pages (sender, viewer) and the campus places admin page.
+   Uses the site's colour tokens (css/styles.css) and companion components. */
+
+.tracking-layout {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.tracking-layout.single {
+  grid-template-columns: minmax(0, 560px);
+  justify-content: center;
+}
+
+.tracking-panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.tracking-panel h1,
+.tracking-panel h2 {
+  margin: 0;
+}
+
+.tracking-panel h1 {
+  font-size: 1.4rem;
+}
+
+.tracking-panel h2 {
+  font-size: 1.1rem;
+}
+
+.tracking-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.tracking-form input[type="text"],
+.tracking-form input[type="password"],
+.tracking-form input[type="number"],
+.tracking-form textarea,
+.tracking-form select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.tracking-form fieldset {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.tracking-form legend {
+  font-weight: 600;
+  padding: 0 0.3rem;
+}
+
+.tracking-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.tracking-consent {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.tracking-map {
+  width: 100%;
+  height: min(70vh, 640px);
+  min-height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.tracking-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: var(--companion-good-bg);
+  color: var(--companion-good-ink);
+  font-weight: 700;
+  justify-self: start;
+}
+
+.tracking-live-indicator::before {
+  content: "";
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tracking-status {
+  list-style: none;
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--panel);
+  line-height: 1.5;
+}
+
+.tracking-status li:first-child {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.tracking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tracking-places {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.tracking-places li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+}
+
+.tracking-places .companion-small {
+  display: block;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.leaflet-container {
+  font: inherit;
+}
+
+.leaflet-container:focus-visible {
+  outline: 3px solid var(--companion-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .tracking-layout {
+    grid-template-columns: 1fr;
+    padding: 0.9rem;
+  }
+
+  .tracking-map {
+    height: 55vh;
+  }
+}

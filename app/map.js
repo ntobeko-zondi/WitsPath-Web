@@ -55,13 +55,13 @@ function renderRoute(route) {
     const nextNode = route[index + 1];
     const distance = computeDistance(node, nextNode, true);
     return {
-      title: `Walk ${Math.round(distance)}m to ${nextNode.label || nextNode.nodeId}`,
+      title: `Walk ${Math.round(distance)} metres to ${nextNode.label || nextNode.nodeId}`,
       subtitle: node.label || node.nodeId,
       index: index + 1
     };
   });
 
-  window.appElements.guidanceText.textContent = `Total route length: ${Math.round(totalDistance)}m`;
+  window.appElements.guidanceText.textContent = `Total route length: ${Math.round(totalDistance)} metres`;
   window.appElements.stepsList.innerHTML = stepDetails
     .map(
       (step) => `

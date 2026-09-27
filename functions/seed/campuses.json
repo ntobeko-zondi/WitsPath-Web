@@ -1,0 +1,37 @@
+{
+  "_note": "Wits campuses. `center`/`zoom` only set the initial map view; they are NEVER used as destinations. Destinations are team-pinned campus_places. Centres come from OpenStreetMap (Nominatim, looked up 2026-09-27); `centerSource` records what each point actually is. For Education and Health Sciences, OSM had no campus outline, so the nearest named campus feature is used as a map-view proxy. `maxPinDistanceM` rejects pins that are clearly on the wrong campus.",
+  "campuses": [
+    {
+      "id": "braamfontein",
+      "name": "Braamfontein Campus (East and West)",
+      "center": { "lat": -26.1888766, "lng": 28.0247912 },
+      "zoom": 16,
+      "maxPinDistanceM": 1500,
+      "centerSource": "OSM way 26327830: University of the Witwatersrand (amenity=university), bbox -26.1939535,-26.1840236,28.0200128,28.0332544"
+    },
+    {
+      "id": "parktown-education",
+      "name": "Education Campus (Parktown)",
+      "center": { "lat": -26.1807609, "lng": 28.0398865 },
+      "zoom": 17,
+      "maxPinDistanceM": 1000,
+      "centerSource": "OSM way 470541382: Wits Education Campus Cricket Oval (proxy for campus centre)"
+    },
+    {
+      "id": "parktown-management",
+      "name": "Wits Business School (Parktown)",
+      "center": { "lat": -26.181458, "lng": 28.0370601 },
+      "zoom": 17,
+      "maxPinDistanceM": 1000,
+      "centerSource": "OSM way 35933526: Wits Business School (amenity=university)"
+    },
+    {
+      "id": "parktown-health",
+      "name": "Health Sciences Campus (Parktown)",
+      "center": { "lat": -26.1767965, "lng": 28.0445292 },
+      "zoom": 17,
+      "maxPinDistanceM": 1000,
+      "centerSource": "OSM node 2407398244: 'Wits Medical School' bus stop, York Road (proxy for campus centre)"
+    }
+  ]
+}
