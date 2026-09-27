@@ -6,6 +6,8 @@ const { createShare, getShare, revokeShare, exportTranscript } = require('./shar
 const { transcribe } = require('./speech/vulavula');
 const { publicLanguageList, isKnownLanguage } = require('./language/languages');
 const { PHRASE_KEYS, isVerified } = require('./directions/phrases');
+const { publicCampuses, validatePlace, isUsable, publicPlace, isAdmin } = require('./places/campusPlaces');
+const { createTrip, recordLocation, endTrip, viewTrip } = require('./tracking/trips');
 
 // Target end-to-end latency for a voice round trip (speech in -> spoken reply
 // starts). The widget measures against this; see test case 4.
@@ -19,6 +21,7 @@ const VOICE_LATENCY_BUDGET_MS = 8000;
  *   store, routing, log,
  *   getAnthropic(): Anthropic client (created lazily from the server secret),
  *   getVulavulaKey(): string | '',
+ *   getAdminToken(): string | ''     // enables /api/admin/** when set
  *   verifyUser(headers): Promise<string | null>   // Firebase Auth uid, optional
  * }
  * request: { method, path, query, headers, body, rawBody }
@@ -109,6 +112,54 @@ function createApi(deps) {
         return { status: 200, json: result };
       }
 
+      // ---- campuses & team-pinned places ---------------------------------
+
+      if (method === 'GET' && path === '/api/campuses') {
+        return { status: 200, json: { campuses: publicCampuses() } };
+      }
+
+      if (method === 'GET' && path === '/api/places') {
+        const campusId = request.query?.campus;
+        const places = (await deps.store.listCampusPlaces())
+          .filter(isUsable)
+          .filter((place) => !campusId || place.campusId === campusId)
+          .map(publicPlace)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        return { status: 200, json: { places } };
+      }
+
+      if (path === '/api/admin/places' || path.startsWith('/api/admin/places/')) {
+        return handleAdminPlaces(deps, request);
+      }
+
+      // ---- live trips ------------------------------------------------------
+
+      if (method === 'POST' && path === '/api/trips') {
+        const result = await createTrip(deps.store, { displayName: request.body?.displayName, placeId: request.body?.placeId });
+        if (result.error) return { status: result.status, json: { error: result.error } };
+        return { status: 201, json: result };
+      }
+
+      const tripMatch = /^\/api\/trips\/([^/]+)(?:\/(location|end))?$/.exec(path);
+      if (tripMatch) {
+        const [, tripId, action] = tripMatch;
+        const ownerToken = request.headers['x-owner-token'];
+        if (method === 'GET' && !action) {
+          const view = await viewTrip(deps.store, tripId, request.query?.lang);
+          return view ? { status: 200, json: view } : notFound();
+        }
+        if (method === 'POST' && action === 'location') {
+          const result = await recordLocation(deps.store, tripId, ownerToken, request.body);
+          if (result.error) return { status: result.status, json: { error: result.error, trip: result.trip } };
+          return { status: 200, json: result.trip };
+        }
+        if (method === 'POST' && action === 'end') {
+          const result = await endTrip(deps.store, tripId, ownerToken, request.body?.reason);
+          if (result.error) return { status: result.status, json: { error: result.error } };
+          return { status: 200, json: result.trip };
+        }
+      }
+
       return notFound();
     } catch (error) {
       if (error instanceof CompanionError) {
@@ -122,6 +173,35 @@ function createApi(deps) {
 
 function notFound() {
   return { status: 404, json: { error: 'not_found' } };
+}
+
+/**
+ * Admin-only CRUD for campus places, authorised by the ADMIN_API_TOKEN secret
+ * (header x-admin-token). Admin responses include unverified fields (notes,
+ * verifiedBy) that the public place list never exposes.
+ */
+async function handleAdminPlaces(deps, request) {
+  const expected = deps.getAdminToken ? deps.getAdminToken() : '';
+  if (!expected) return { status: 503, json: { error: 'admin_disabled' } };
+  if (!isAdmin(expected, request.headers['x-admin-token'])) return { status: 401, json: { error: 'unauthorized' } };
+
+  const { method, path } = request;
+  const id = path.startsWith('/api/admin/places/') ? decodeURIComponent(path.slice('/api/admin/places/'.length)) : null;
+
+  if (method === 'GET' && !id) {
+    return { status: 200, json: { places: await deps.store.listCampusPlaces() } };
+  }
+  if ((method === 'POST' && !id) || (method === 'PUT' && id)) {
+    if (id && !(await deps.store.getCampusPlace(id))) return notFound();
+    const validated = validatePlace(request.body || {});
+    if (validated.error) return { status: 400, json: validated };
+    const savedId = await deps.store.saveCampusPlace(id, validated.place);
+    return { status: id ? 200 : 201, json: { id: savedId, ...validated.place } };
+  }
+  if (method === 'DELETE' && id) {
+    return (await deps.store.deleteCampusPlace(id)) ? { status: 204 } : notFound();
+  }
+  return notFound();
 }
 
 module.exports = { createApi, VOICE_LATENCY_BUDGET_MS };

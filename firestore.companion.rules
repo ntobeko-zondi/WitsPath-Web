@@ -15,6 +15,13 @@ service cloud.firestore {
     match /shared_routes/{shareId} {
       allow read, write: if false;
     }
+    // Live trips hold a person's current location: server-only.
+    match /live_trips/{tripId} {
+      allow read, write: if false;
+    }
+    match /campus_places/{placeId} {
+      allow read, write: if false;
+    }
     match /dev_route_fixtures/{fixtureId} {
       allow read, write: if false;
     }

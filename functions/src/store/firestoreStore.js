@@ -114,6 +114,49 @@ class FirestoreStore {
   async updateSharedRoute(id, patch) {
     await this.db.collection(COLLECTIONS.sharedRoutes).doc(id).update(patch);
   }
+
+  async listCampusPlaces() {
+    const snapshot = await this.db.collection(COLLECTIONS.campusPlaces).get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...toPlain(doc.data()) }));
+  }
+
+  async getCampusPlace(id) {
+    const doc = await this.db.collection(COLLECTIONS.campusPlaces).doc(id).get();
+    return doc.exists ? { id: doc.id, ...toPlain(doc.data()) } : null;
+  }
+
+  async saveCampusPlace(id, place) {
+    const collection = this.db.collection(COLLECTIONS.campusPlaces);
+    if (id) {
+      await collection.doc(id).set(place);
+      return id;
+    }
+    const ref = await collection.add(place);
+    return ref.id;
+  }
+
+  async deleteCampusPlace(id) {
+    const ref = this.db.collection(COLLECTIONS.campusPlaces).doc(id);
+    const doc = await ref.get();
+    if (!doc.exists) return false;
+    await ref.delete();
+    return true;
+  }
+
+  async createTrip(trip) {
+    const id = newId();
+    await this.db.collection(COLLECTIONS.liveTrips).doc(id).set(trip);
+    return id;
+  }
+
+  async getTrip(id) {
+    const doc = await this.db.collection(COLLECTIONS.liveTrips).doc(id).get();
+    return doc.exists ? toPlain(doc.data()) : null;
+  }
+
+  async updateTrip(id, patch) {
+    await this.db.collection(COLLECTIONS.liveTrips).doc(id).update(patch);
+  }
 }
 
 // Convert Firestore Timestamps back to Dates, recursively.

@@ -26,7 +26,8 @@ test('phrase_templates seed covers all 11 official languages x every phrase key'
   const rows = buildSeedTemplates();
   assert.equal(LANGUAGE_CODES.length, 11);
   assert.equal(rows.length, 11 * PHRASE_KEYS.length);
-  assert.ok(PHRASE_KEYS.length >= 20 && PHRASE_KEYS.length <= 30);
+  // ~20-30 direction phrases per the brief, plus the live-trip status phrases.
+  assert.ok(PHRASE_KEYS.length >= 20 && PHRASE_KEYS.length <= 40);
   for (const row of rows) {
     assert.deepEqual(Object.keys(row).sort(), ['key', 'lang', 'text', 'verifiedAt', 'verifiedBy']);
     // Only English ships verified; nothing else may reach users yet.

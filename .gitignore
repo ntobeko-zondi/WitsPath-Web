@@ -9,6 +9,9 @@ node_modules/
 .secret.local
 .runtimeconfig.json
 
+# Local dev data (team-pinned places while developing)
+.dev-data/
+
 # Firebase
 .firebase/
 firebase-debug.log

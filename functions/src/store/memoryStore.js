@@ -17,6 +17,8 @@ class MemoryStore {
     this.reports = new Map();
     this.sessions = new Map();
     this.sharedRoutes = new Map();
+    this.campusPlaces = new Map();
+    this.trips = new Map();
     this.templates = {};
     for (const row of phraseRows) {
       this.templates[row.lang] = this.templates[row.lang] || {};
@@ -88,6 +90,41 @@ class MemoryStore {
   async updateSharedRoute(id, patch) {
     const doc = this.sharedRoutes.get(id);
     if (doc) this.sharedRoutes.set(id, { ...doc, ...structuredClone(patch) });
+  }
+
+  async listCampusPlaces() {
+    return [...this.campusPlaces.entries()].map(([id, place]) => ({ id, ...structuredClone(place) }));
+  }
+
+  async getCampusPlace(id) {
+    const place = this.campusPlaces.get(id);
+    return place ? { id, ...structuredClone(place) } : null;
+  }
+
+  async saveCampusPlace(id, place) {
+    const placeId = id || newId();
+    this.campusPlaces.set(placeId, structuredClone(place));
+    return placeId;
+  }
+
+  async deleteCampusPlace(id) {
+    return this.campusPlaces.delete(id);
+  }
+
+  async createTrip(trip) {
+    const id = newId();
+    this.trips.set(id, structuredClone(trip));
+    return id;
+  }
+
+  async getTrip(id) {
+    const trip = this.trips.get(id);
+    return trip ? structuredClone(trip) : null;
+  }
+
+  async updateTrip(id, patch) {
+    const trip = this.trips.get(id);
+    if (trip) this.trips.set(id, { ...trip, ...structuredClone(patch) });
   }
 }
 

@@ -313,6 +313,13 @@ body[data-contrast="true"] {
   margin-top: 0.5rem;
 }
 
+.companion-trip-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .companion-share-button {
   display: inline-flex;
   align-items: center;

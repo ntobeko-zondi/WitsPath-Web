@@ -6,6 +6,7 @@
 // Secrets (never in client code or git):
 //   firebase functions:secrets:set ANTHROPIC_API_KEY
 //   firebase functions:secrets:set VULAVULA_API_KEY   (set to "disabled" to turn off)
+//   firebase functions:secrets:set ADMIN_API_TOKEN    (long random string, or "disabled")
 // Non-secret settings (ROUTING_MODE, ROUTING_SERVICE_URL, ...) go in
 // functions/.env - see functions/.env.example.
 
@@ -24,6 +25,9 @@ initializeApp();
 
 const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY');
 const VULAVULA_API_KEY = defineSecret('VULAVULA_API_KEY');
+// Shared token for the campus-places admin page. Set to "disabled" to turn
+// admin editing off. TODO: replace with Firebase Auth + an admin claim.
+const ADMIN_API_TOKEN = defineSecret('ADMIN_API_TOKEN');
 
 const store = new FirestoreStore(getFirestore());
 const routing = createRoutingService({
@@ -46,6 +50,10 @@ const api = createApi({
     const key = VULAVULA_API_KEY.value();
     return key && key !== 'disabled' ? key : '';
   },
+  getAdminToken: () => {
+    const token = ADMIN_API_TOKEN.value();
+    return token && token !== 'disabled' ? token : '';
+  },
   verifyUser: async (headers) => {
     const match = /^Bearer (.+)$/.exec(headers.authorization || '');
     if (!match) return null;
@@ -58,7 +66,7 @@ const api = createApi({
 });
 
 exports.companionMessage = onRequest(
-  { secrets: [ANTHROPIC_API_KEY, VULAVULA_API_KEY], timeoutSeconds: 60, maxInstances: 10 },
+  { secrets: [ANTHROPIC_API_KEY, VULAVULA_API_KEY, ADMIN_API_TOKEN], timeoutSeconds: 60, maxInstances: 10 },
   async (req, res) => {
     const result = await api({
       method: req.method,

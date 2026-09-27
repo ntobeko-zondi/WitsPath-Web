@@ -46,6 +46,7 @@ Do **not** put keys in `functions/.env`: Firebase deploys that file with the fun
 ```bash
 firebase functions:secrets:set ANTHROPIC_API_KEY
 firebase functions:secrets:set VULAVULA_API_KEY      # or the value "disabled"
+firebase functions:secrets:set ADMIN_API_TOKEN       # long random string, or "disabled"
 cp functions/.env.example functions/.env             # set ROUTING_MODE etc.
 node functions/scripts/seed-firestore.js             # places + phrase_templates
 firebase deploy --only hosting,functions:companion
@@ -76,6 +77,40 @@ Merge `firestore.companion.rules` into the Android project's rules. Every compan
 | 6 | Xitsonga flagged | Deterministic + UI verified in the browser. Live: eval script. |
 | 7 | Share flow | Deterministic + verified in the browser (create, view, revoke). |
 | 8 | Key not in bundle | `npm run check:bundle`: passing locally. Re-run against the deployed URL. |
+
+## Live trips (all Wits campuses)
+
+Someone heading to a campus place can share a live link. People following it see a map and status lines such as "Lindiwe is on the way to …", "Lindiwe is near …", "Lindiwe has arrived at …" and "Last update 3 minutes ago".
+
+| Page | Who | What |
+|---|---|---|
+| `/trip.html` | Sender | Picks a destination, types a display name, shares location. Share by Copy/WhatsApp/Email/SMS. "I've arrived" / "Stop sharing". |
+| `/track/{id}` | Anyone with the link | Map plus status lines. Refreshes every 5 seconds (30 while the tab is hidden). |
+| `/admin/` | WitsPath team | Pins buildings and accessible entrances per campus. Needs `ADMIN_API_TOKEN`. |
+
+How it behaves:
+- **Destinations** are only places the team has pinned (`campus_places`, each recording who pinned it). Campus centres in `functions/seed/campuses.json` set the starting map view only and are never destinations.
+- **Status lines** are rendered on the server from `phrase_templates` (the `tracking_*` keys), with the same verified-translation gate as directions. The model never writes them.
+- **Arrival** is announced only after 2 consecutive fixes within 20 metres at 30-metre accuracy or better, or when the sender taps "I've arrived".
+- **Stale positions:** if no update arrives for 2 minutes, followers see "was last seen…", not "is on the way".
+- **Privacy:** only the latest position is stored. It is deleted on arrival or stop, and trips end after 2 hours. The sender controls the trip with a secret token kept in their browser.
+- **Maps:** OpenStreetMap tiles via Leaflet (`vendor/leaflet-1.9.4`, BSD-2), accessed only through `tracking/map-adapter.js`.
+
+Dev: set `ADMIN_API_TOKEN` in `functions/.secret.local` to use `/admin/`. Pins are saved to `functions/.dev-data/campus-places.json` (git-ignored). Import them into Firestore with:
+
+```bash
+node functions/scripts/seed-firestore.js --campus-places functions/.dev-data/campus-places.json
+```
+
+Deploy: `firebase functions:secrets:set ADMIN_API_TOKEN`.
+
+Live-trip follow-ups:
+- **Google Maps:** implement `createGoogleMap()` in `tracking/map-adapter.js` with a Maps JavaScript API key restricted to your domains, then set `window.WITSPATH_MAP_PROVIDER = 'google'`.
+- **OSM tile usage policy:** fine for development and light use. Production traffic needs a tile provider.
+- **Pin every campus:** nothing is pinned yet, so the sender page shows "No destinations" until the team adds places.
+- **Admin access:** replace the shared admin token with Firebase Auth plus an admin claim.
+- **Sending from the Android app:** browsers stop sharing when the page is closed or the phone is locked. The Android app can share in the background.
+- **Walking distance:** distances are straight-line. Showing walking distance and ETA needs the shared routing service to work with GPS positions.
 
 ## Blocking follow-ups
 

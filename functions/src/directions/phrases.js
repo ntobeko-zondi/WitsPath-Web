@@ -6,7 +6,8 @@ const { LANGUAGE_CODES, SOURCE_LANGUAGE } = require('../language/languages');
 // translated by the model. Directions are assembled from these templates and
 // interpolated with numbers and place names on the server.
 //
-// Placeholders: {place} {distance} {minutes} {floor}. Place names are proper
+// Placeholders: {place} {distance} {minutes} {floor} {name}. Place names and
+// the sender's display name are proper
 // nouns and are inserted verbatim in every language. Units are always written
 // in full ("metres", "minutes"), never abbreviated, so they read clearly and
 // are spoken correctly by screen readers and text-to-speech. Plurals that
@@ -38,7 +39,22 @@ const SOURCE_PHRASES = {
   estimated_time_one: 'Estimated time: about 1 minute.',
   arrive: 'You have arrived at {place}.',
   route_unavailable: 'A route could not be confirmed.',
-  caution_slope: 'Caution: slope ahead.'
+  caution_slope: 'Caution: slope ahead.',
+
+  // Live trip status, shown to people following a shared trip. {name} is the
+  // display name the sender typed, inserted verbatim like a place name.
+  tracking_waiting: "Waiting for {name}'s first location update.",
+  tracking_on_the_way: '{name} is on the way to {place}.',
+  tracking_near: '{name} is near {place}.',
+  tracking_arrived: '{name} has arrived at {place}.',
+  tracking_distance: 'About {distance} metres from {place} in a straight line.',
+  tracking_last_seen: '{name} was last seen about {distance} metres from {place} in a straight line.',
+  tracking_last_update_now: 'Last update just now.',
+  tracking_last_update_one: 'Last update 1 minute ago.',
+  tracking_last_update: 'Last update {minutes} minutes ago.',
+  tracking_low_accuracy: 'Location is approximate, to within about {distance} metres.',
+  tracking_stopped: '{name} stopped sharing their trip.',
+  tracking_ended: 'This live trip has ended.'
 };
 
 const PHRASE_KEYS = Object.keys(SOURCE_PHRASES);

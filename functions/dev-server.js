@@ -30,8 +30,8 @@ const PORT = Number(process.env.PORT || 5173);
 const SITE_ROOT = path.resolve(__dirname, '..');
 // Only these paths are public - mirrors the hosting config, so functions/,
 // .env and scripts are never served.
-const PUBLIC_FILES = new Set(['/index.html', '/share.html']);
-const PUBLIC_DIRS = ['/app/', '/css/', '/data/', '/companion/'];
+const PUBLIC_FILES = new Set(['/index.html', '/share.html', '/trip.html', '/track.html']);
+const PUBLIC_DIRS = ['/app/', '/css/', '/data/', '/companion/', '/tracking/', '/vendor/', '/admin/'];
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -45,6 +45,32 @@ const MIME = {
 
 const seed = loadSeedData();
 const store = new MemoryStore(seed);
+
+// Team-pinned places are real work, so in dev they survive restarts: they're
+// saved to functions/.dev-data/campus-places.json (git-ignored). Import them
+// into Firestore with: node scripts/seed-firestore.js --campus-places <file>
+const PLACES_FILE = path.join(__dirname, '.dev-data', 'campus-places.json');
+if (fs.existsSync(PLACES_FILE)) {
+  for (const { id, ...place } of JSON.parse(fs.readFileSync(PLACES_FILE, 'utf8'))) {
+    store.campusPlaces.set(id, place);
+  }
+}
+async function persistPlaces() {
+  fs.mkdirSync(path.dirname(PLACES_FILE), { recursive: true });
+  fs.writeFileSync(PLACES_FILE, JSON.stringify(await store.listCampusPlaces(), null, 2));
+}
+const saveCampusPlace = store.saveCampusPlace.bind(store);
+const deleteCampusPlace = store.deleteCampusPlace.bind(store);
+store.saveCampusPlace = async (id, place) => {
+  const savedId = await saveCampusPlace(id, place);
+  await persistPlaces();
+  return savedId;
+};
+store.deleteCampusPlace = async (id) => {
+  const deleted = await deleteCampusPlace(id);
+  await persistPlaces();
+  return deleted;
+};
 const routing = createRoutingService({
   mode: config.ROUTING_MODE,
   url: config.ROUTING_SERVICE_URL,
@@ -65,6 +91,7 @@ const api = createApi({
     return anthropic;
   },
   getVulavulaKey: () => process.env.VULAVULA_API_KEY || '',
+  getAdminToken: () => process.env.ADMIN_API_TOKEN || '',
   verifyUser: async () => null
 });
 
@@ -89,6 +116,8 @@ function readBody(req) {
 function serveStatic(urlPath, res) {
   let filePath = urlPath === '/' ? '/index.html' : urlPath;
   if (/^\/share\/[^/]+$/.test(filePath)) filePath = '/share.html';
+  if (/^\/track\/[^/]+$/.test(filePath)) filePath = '/track.html';
+  if (filePath === '/admin' || filePath === '/admin/') filePath = '/admin/places.html';
 
   const allowed = PUBLIC_FILES.has(filePath) || PUBLIC_DIRS.some((dir) => filePath.startsWith(dir));
   const absolute = path.resolve(SITE_ROOT, `.${filePath}`);
@@ -151,4 +180,9 @@ server.listen(PORT, () => {
   console.log(`WitsPath dev server: http://localhost:${PORT}`);
   console.log(`Routing mode: ${config.ROUTING_MODE} (${routing.source})`);
   if (!process.env.ANTHROPIC_API_KEY) console.log('ANTHROPIC_API_KEY not set - companion replies will return 503.');
+  console.log(
+    process.env.ADMIN_API_TOKEN
+      ? `Campus places admin: http://localhost:${PORT}/admin/`
+      : 'ADMIN_API_TOKEN not set - the campus places admin page is disabled.'
+  );
 });

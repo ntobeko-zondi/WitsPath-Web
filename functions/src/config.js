@@ -24,6 +24,24 @@ module.exports = {
 
   SHARE_TTL_DAYS: 30,
 
+  // Live trips. Arrival is only announced when the fix is both close and
+  // precise enough, several times in a row - one noisy GPS reading must not
+  // tell someone "has arrived".
+  TRACKING: {
+    TRIP_TTL_MS: 2 * 60 * 60 * 1000,
+    ARRIVAL_RADIUS_M: 20,
+    ARRIVAL_MAX_ACCURACY_M: 30,
+    ARRIVAL_CONSECUTIVE_FIXES: 2,
+    NEAR_RADIUS_M: 100,
+    LOW_ACCURACY_M: 50,
+    STALE_AFTER_MS: 2 * 60 * 1000,
+    MIN_FIX_INTERVAL_MS: 3000,
+    // A fix this far from the destination is almost certainly wrong.
+    MAX_DISTANCE_FROM_DESTINATION_M: 50000,
+    MAX_ACCURACY_M: 5000,
+    MAX_NAME_CHARS: 40
+  },
+
   // Travel-time assumptions. Deliberately on the slow side so estimates err
   // towards leaving earlier. Always surfaced to the user as an estimate.
   SPEED_MPS: {
@@ -60,6 +78,9 @@ module.exports = {
     chatSessions: 'chat_sessions',
     phraseTemplates: 'phrase_templates',
     // Placeholder-only data for ROUTING_MODE=fixture.
-    routeFixtures: 'dev_route_fixtures'
+    routeFixtures: 'dev_route_fixtures',
+    // Team-pinned buildings/entrances with GPS coordinates (all campuses).
+    campusPlaces: 'campus_places',
+    liveTrips: 'live_trips'
   }
 };
