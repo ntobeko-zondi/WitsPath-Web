@@ -2,10 +2,11 @@ window.appState = {
   graph: null,
   route: null,
   floor: null,
+  map: null,
   mapScale: 1,
   mapX: 0,
   mapY: 0,
-  minScale: 1,
+  minScale: 0.35,
   maxScale: 4
 };
 
@@ -14,12 +15,15 @@ window.appElements = {
   textSizeSelect: document.getElementById('textSizeSelect'),
   stepFreeOnly: document.getElementById('stepFreeOnly'),
   highContrastToggle: document.getElementById('highContrastToggle'),
+  darkModeCheckbox: document.getElementById('darkModeCheckbox'),
   fromSelect: document.getElementById('fromSelect'),
   toSelect: document.getElementById('toSelect'),
   routeButton: document.getElementById('routeButton'),
   swapButton: document.getElementById('swapButton'),
   statusMessage: document.getElementById('statusMessage'),
   mapTitle: document.getElementById('mapTitle'),
+  estimatedTime: document.getElementById('estimatedTime'),
+  estimatedDistance: document.getElementById('estimatedDistance'),
   guidanceText: document.getElementById('guidanceText'),
   stepsList: document.getElementById('stepsList'),
   mapViewport: document.getElementById('mapViewport'),
@@ -33,7 +37,8 @@ window.appElements = {
   navToggle: document.getElementById('navToggle'),
   closeDrawer: document.getElementById('closeDrawer'),
   languageButton: document.getElementById('languageButton'),
-  contrastToggle: document.getElementById('contrastToggle')
+  contrastToggle: document.getElementById('contrastToggle'),
+  darkModeToggle: document.getElementById('darkModeToggle')
 };
 
 function openDrawer() {
@@ -110,6 +115,9 @@ function requestRoute() {
   const route = solveRoute(fromNode, toNode, requireAccessible);
 
   if (!route || route.length < 2) {
+    window.appState.route = null;
+    window.appState.navigationStarted = false;
+    window.appElements.routeButton.querySelector('span').textContent = 'Start Navigation';
     const detail = requireAccessible
       ? 'No step-free route is available for that journey.'
       : 'No route could be found between those locations.';
@@ -127,7 +135,9 @@ function requestRoute() {
 
   const routeLabel = `${fromNode.label || fromNode.nodeId} to ${toNode.label || toNode.nodeId}`;
   window.appElements.mapTitle.textContent = routeLabel;
-  showStatus(`Route ready • ${Math.round(totalDistance)} metres`, 'success');
+  window.appElements.estimatedTime.textContent = `${Math.max(1, Math.ceil(totalDistance / 65))} min`;
+  window.appElements.estimatedDistance.textContent = `(${Math.round(totalDistance)} m)`;
+  showStatus(`Route ready • ${Math.round(totalDistance)} m`, 'success');
   renderRoute(route);
 }
 
@@ -176,6 +186,12 @@ function wireControls() {
 
   window.appElements.stepFreeOnly.addEventListener('change', (event) => {
     setStorage(STORAGE_KEYS.stepFreeOnly, String(event.target.checked));
+    const activeMode = event.target.checked ? 'wheelchair' : 'general';
+    document.querySelectorAll('.mode-button').forEach((button) => {
+      const selected = button.dataset.mode === activeMode;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
     if (window.appState.route) {
       requestRoute();
     }
@@ -183,6 +199,27 @@ function wireControls() {
 
   window.appElements.highContrastToggle.addEventListener('change', (event) => {
     applyContrast(event.target.checked);
+  });
+
+  window.appElements.darkModeCheckbox.addEventListener('change', (event) => {
+    applyDarkMode(event.target.checked);
+  });
+
+  document.querySelectorAll('.mode-button').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.mode;
+      document.querySelectorAll('.mode-button').forEach((modeButton) => {
+        const selected = modeButton === button;
+        modeButton.classList.toggle('is-selected', selected);
+        modeButton.setAttribute('aria-pressed', String(selected));
+      });
+      const requiresStepFree = mode !== 'general';
+      window.appElements.stepFreeOnly.checked = requiresStepFree;
+      setStorage(STORAGE_KEYS.stepFreeOnly, String(requiresStepFree));
+      if (window.appState.route) {
+        requestRoute();
+      }
+    });
   });
 
   window.appElements.navToggle.addEventListener('click', () => openDrawer());
@@ -194,12 +231,34 @@ function wireControls() {
     window.appElements.highContrastToggle.checked = nextValue;
     applyContrast(nextValue);
   });
+  window.appElements.darkModeToggle.addEventListener('click', () => {
+    applyDarkMode(document.body.dataset.theme !== 'dark');
+  });
 
-  window.appElements.routeButton.addEventListener('click', requestRoute);
   window.appElements.swapButton.addEventListener('click', swapLocations);
+  window.appElements.routeButton.addEventListener('click', () => {
+    if (window.appState.navigationStarted) {
+      window.appState.navigationStarted = false;
+      window.appElements.routeButton.querySelector('span').textContent = 'Start Navigation';
+      renderRoute(window.appState.route);
+      showStatus('Navigation ended.', '');
+      return;
+    }
+
+    requestRoute();
+    if (window.appElements.statusMessage.classList.contains('error')) {
+      return;
+    }
+
+    window.appState.navigationStarted = true;
+    window.appElements.routeButton.querySelector('span').textContent = 'End Navigation';
+    renderRoute(window.appState.route);
+    showStatus('Navigation started • Follow the steps.', 'success');
+  });
   window.appElements.zoomIn.addEventListener('click', () => zoomMap(1.2));
   window.appElements.zoomOut.addEventListener('click', () => zoomMap(1 / 1.2));
   window.appElements.resetView.addEventListener('click', resetMapView);
+  window.addEventListener('resize', resetMapView);
 
   window.appElements.mapViewport.addEventListener('wheel', handleMapWheel, { passive: false });
   window.appElements.mapViewport.addEventListener('pointerdown', startMapDrag);
@@ -232,6 +291,8 @@ function wireControls() {
   const storedLanguage = readStorage(STORAGE_KEYS.language, '');
   const storedTextSize = readStorage(STORAGE_KEYS.textSize, 'default');
   const storedContrast = readStorage(STORAGE_KEYS.highContrast, 'false') === 'true';
+  const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const storedDarkMode = readStorage(STORAGE_KEYS.darkMode, String(prefersDarkMode)) === 'true';
   const storedStepFree = readStorage(STORAGE_KEYS.stepFreeOnly, 'true') === 'true';
 
   window.appElements.languageSelect.value = storedLanguage;
@@ -240,6 +301,7 @@ function wireControls() {
   window.appElements.highContrastToggle.checked = storedContrast;
   applyLanguage(storedLanguage);
   applyTextScale(storedTextSize);
+  applyDarkMode(storedDarkMode);
   applyContrast(storedContrast);
 }
 

@@ -2,8 +2,12 @@ function findNode(nodeId) {
   return window.appState.graph?.nodes.find((node) => node.nodeId === nodeId) || null;
 }
 
+function parseRouteNumber(value) {
+  return Number.parseFloat(String(value).replace(',', '.'));
+}
+
 function computeEdgeWeight(edge) {
-  return Number(edge.distance) * Number(edge.accessibilityCost || 1);
+  return parseRouteNumber(edge.distance) * parseRouteNumber(edge.accessibilityCost || 1);
 }
 
 function computeDistance(nodeA, nodeB) {
@@ -19,7 +23,7 @@ function heuristicDistance(nodeA, nodeB) {
   const b = getFloorPixel(nodeB);
   const dx = a.x - b.x;
   const dy = a.y - b.y;
-  return Math.hypot(dx, dy);
+  return Math.hypot(dx, dy) * (window.appState.floor?.metresPerPixel || 1);
 }
 
 function getFloorPixel(node) {
@@ -29,8 +33,8 @@ function getFloorPixel(node) {
   }
 
   return {
-    x: Number(node.x) / floor.metresPerPixel,
-    y: Number(node.y) / floor.metresPerPixel
+    x: Number(node.x),
+    y: Number(node.y)
   };
 }
 
@@ -56,7 +60,7 @@ function solveRoute(fromNode, toNode, requireAccessible) {
       return;
     }
 
-    const cost = Number(edge.accessibilityCost || 1);
+    const cost = parseRouteNumber(edge.accessibilityCost || 1);
     const blocked = edge.status === 'blocked' || cost >= 999;
     const isStairsOnly = Boolean(edge.stairs) && !edge.ramp && !edge.elevator;
 
@@ -92,8 +96,8 @@ function solveRoute(fromNode, toNode, requireAccessible) {
     }
 
     for (const neighbor of adjacency.get(current.nodeId) || []) {
-      const tentative = (gScore.get(current.nodeId) || Infinity) + neighbor.weight;
-      if (tentative < (gScore.get(neighbor.node.nodeId) || Infinity)) {
+      const tentative = (gScore.get(current.nodeId) ?? Infinity) + neighbor.weight;
+      if (tentative < (gScore.get(neighbor.node.nodeId) ?? Infinity)) {
         cameFrom.set(neighbor.node.nodeId, current.nodeId);
         gScore.set(neighbor.node.nodeId, tentative);
         const heuristic = heuristicDistance(neighbor.node, toNode);
