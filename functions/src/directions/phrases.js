@@ -7,21 +7,24 @@ const { LANGUAGE_CODES, SOURCE_LANGUAGE } = require('../language/languages');
 // interpolated with numbers and place names on the server.
 //
 // Placeholders: {place} {distance} {minutes} {floor}. Place names are proper
-// nouns and are inserted verbatim in every language.
+// nouns and are inserted verbatim in every language. Units are always written
+// in full ("metres", "minutes"), never abbreviated, so they read clearly and
+// are spoken correctly by screen readers and text-to-speech. Plurals that
+// matter get their own key (*_one) because plural rules differ per language.
 //
 // English is the source text. The seed script writes it to
 // phrase_templates/en/phrases/{key}; a native-speaker review pass fills in
 // the other 10 languages (text + verifiedBy + verifiedAt) with no schema change.
 const SOURCE_PHRASES = {
-  route_summary: 'Route to {place}: {distance} m.',
+  route_summary: 'Route to {place}: {distance} metres.',
   start_at: 'Start at {place}.',
-  head_towards: 'Head towards {place} for {distance} m.',
-  continue_to: 'Continue {distance} m to {place}.',
-  go_straight: 'Go straight on for {distance} m to {place}.',
-  turn_left: 'Turn left and continue {distance} m to {place}.',
-  turn_right: 'Turn right and continue {distance} m to {place}.',
-  slight_left: 'Bear slightly left and continue {distance} m to {place}.',
-  slight_right: 'Bear slightly right and continue {distance} m to {place}.',
+  head_towards: 'Head towards {place} for {distance} metres.',
+  continue_to: 'Continue {distance} metres to {place}.',
+  go_straight: 'Go straight on for {distance} metres to {place}.',
+  turn_left: 'Turn left and continue {distance} metres to {place}.',
+  turn_right: 'Turn right and continue {distance} metres to {place}.',
+  slight_left: 'Bear slightly left and continue {distance} metres to {place}.',
+  slight_right: 'Bear slightly right and continue {distance} metres to {place}.',
   use_ramp: 'Use the ramp at {place}.',
   take_elevator: 'Take the elevator to floor {floor}.',
   elevator_out_of_service: 'The elevator at {place} is reported out of service.',
@@ -31,7 +34,8 @@ const SOURCE_PHRASES = {
   not_step_free: 'This route is not confirmed step-free.',
   path_blocked: 'The path at {place} is reported blocked.',
   accessible_entrance: 'Use the accessible entrance at {place}.',
-  estimated_time: 'Estimated time: about {minutes} min.',
+  estimated_time: 'Estimated time: about {minutes} minutes.',
+  estimated_time_one: 'Estimated time: about 1 minute.',
   arrive: 'You have arrived at {place}.',
   route_unavailable: 'A route could not be confirmed.',
   caution_slope: 'Caution: slope ahead.'

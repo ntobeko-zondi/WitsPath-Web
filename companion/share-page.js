@@ -54,7 +54,7 @@
     document.title = `${route.from} to ${route.to} · WitsPath`;
     facts.append(
       chip(route.accessible ? 'Step-free' : 'Not confirmed step-free', route.accessible ? 'is-good' : 'is-warn'),
-      chip(`${Math.round(route.distanceM)} m`)
+      chip(`${Math.round(route.distanceM)} ${Math.round(route.distanceM) === 1 ? 'metre' : 'metres'}`)
     );
     for (const step of route.steps) {
       const li = document.createElement('li');

@@ -3,7 +3,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { classifyTurn } = require('../src/directions/buildDirections');
-const { buildSeedTemplates, renderPhrase, PHRASE_KEYS, isVerified } = require('../src/directions/phrases');
+const { buildSeedTemplates, renderPhrase, PHRASE_KEYS, isVerified, SOURCE_PHRASES } = require('../src/directions/phrases');
+
+test('source phrases write units in full, never "m" or "min"', () => {
+  for (const [key, text] of Object.entries(SOURCE_PHRASES)) {
+    assert.doesNotMatch(text, /\}\s*(m|km|min)\b/, key);
+  }
+  assert.match(SOURCE_PHRASES.turn_left, /\{distance\} metres/);
+});
 const { LANGUAGE_CODES } = require('../src/language/languages');
 
 test('turn classification uses screen coordinates (y down)', () => {
@@ -29,11 +36,11 @@ test('phrase_templates seed covers all 11 official languages x every phrase key'
 
 test('unverified phrases never render; English fallback is flagged', () => {
   const templates = {
-    en: { turn_left: { text: 'Turn left and continue {distance} m to {place}.', verifiedBy: 'team' } },
+    en: { turn_left: { text: 'Turn left and continue {distance} metres to {place}.', verifiedBy: 'team' } },
     zu: { turn_left: { text: 'Jika ngasekhohlo', verifiedBy: '' } }
   };
   const step = renderPhrase('turn_left', { place: 'CLM', distance: 20 }, 'zu', templates);
-  assert.equal(step.text, 'Turn left and continue 20 m to CLM.');
+  assert.equal(step.text, 'Turn left and continue 20 metres to CLM.');
   assert.equal(step.lang, 'en');
   assert.equal(step.fallback, true);
 

@@ -313,7 +313,105 @@ body[data-contrast="true"] {
   margin-top: 0.5rem;
 }
 
+.companion-share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Share dialog. Padding lives on the inner body so a click on the dialog
+   element itself is always a backdrop click. */
+.share-dialog {
+  width: min(460px, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.share-dialog::backdrop {
+  background: rgba(9, 19, 33, 0.55);
+}
+
+.share-dialog-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.1rem;
+}
+
+.share-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.share-dialog-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.share-dialog-route {
+  margin: 0;
+  font-weight: 700;
+}
+
+.share-link-step {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.share-link-step[hidden],
+#shareCreateStep[hidden] {
+  display: none;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.share-link-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.share-link-row .companion-primary {
+  flex: 0 0 auto;
+}
+
+.share-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.share-targets a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.share-targets [hidden] {
+  display: none;
+}
+
+.share-delete {
+  justify-self: start;
+}
+
 .companion-launcher:focus-visible,
+.share-dialog a:focus-visible,
+.share-dialog input:focus-visible,
 .companion-close:focus-visible,
 .companion-primary:focus-visible,
 .companion-secondary:focus-visible,

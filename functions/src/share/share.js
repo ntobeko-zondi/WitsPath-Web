@@ -12,14 +12,18 @@ function hashToken(token) {
 }
 
 /**
- * Create a share link for the last confirmed route in a session. The card is
- * built from server-side session data, never from client input, so a shared
- * link can't carry a forged route.
+ * Create a share link for one route card in a session (the latest one if no
+ * routeId is given). The card is built from server-side session data, never
+ * from client input, so a shared link can't carry a forged route.
+ *
+ * @returns the share, or { error: 'session_not_found' | 'route_not_found' }
  */
-async function createShare(store, sessionId, now = new Date()) {
+async function createShare(store, sessionId, routeId, now = new Date()) {
   const session = typeof sessionId === 'string' ? await store.getSession(sessionId) : null;
-  const route = session?.lastRoute;
-  if (!route) return null;
+  if (!session) return { error: 'session_not_found' };
+  const routes = session.routes || [];
+  const route = routeId ? routes.find((candidate) => candidate.routeId === routeId) : routes[routes.length - 1];
+  if (!route) return { error: 'route_not_found' };
 
   const revokeToken = crypto.randomBytes(24).toString('base64url');
   const expiresAt = new Date(now.getTime() + config.SHARE_TTL_DAYS * 24 * 60 * 60 * 1000);

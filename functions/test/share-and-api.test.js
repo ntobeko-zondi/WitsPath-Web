@@ -32,8 +32,33 @@ async function sessionWithRoute(api) {
 
 const routeScript = () => [
   callsTools(toolUse('get_route', { from_node_id: NODES.msbLabs, to_node_id: NODES.genmin, accessible: true })),
-  says('Found a step-free route of 82 m. Steps below.')
+  says('Found a step-free route of 82 metres. Steps below.')
 ];
+
+test('share targets the exact route card, not just the latest route', async () => {
+  const deps = makeDeps([
+    ...routeScript(),
+    callsTools(toolUse('get_route', { from_node_id: NODES.msb, to_node_id: NODES.msbLabs, accessible: true })),
+    says('Second route found.')
+  ]);
+  const api = apiFor(deps);
+  const first = await api({ method: 'POST', path: '/api/companion/message', headers: {}, body: { text: 'MSB labs to Genmin' } });
+  const sessionId = first.json.sessionId;
+  await api({ method: 'POST', path: '/api/companion/message', headers: {}, body: { sessionId, text: 'MSB to MSB labs' } });
+
+  const shared = await api({ method: 'POST', path: '/api/share', headers: {}, body: { sessionId, routeId: first.json.route.routeId } });
+  const card = await api({ method: 'GET', path: `/api/share/${shared.json.shareId}`, headers: {} });
+  assert.equal(card.json.to, 'Genmin Laboratories');
+  assert.equal(card.json.routeId, undefined);
+});
+
+test('share and export explain a missing session (e.g. dev server restarted)', async () => {
+  const api = apiFor(makeDeps([]));
+  const share = await api({ method: 'POST', path: '/api/share', headers: {}, body: { sessionId: 'gone-after-restart', routeId: 'x' } });
+  assert.deepEqual([share.status, share.json.error], [404, 'session_not_found']);
+  const exported = await api({ method: 'POST', path: '/api/companion/export', headers: {}, body: { sessionId: 'gone-after-restart' } });
+  assert.deepEqual([exported.status, exported.json.error], [404, 'session_not_found']);
+});
 
 test('test case 7 (share): link exposes only the route card fields', async () => {
   const deps = makeDeps(routeScript());

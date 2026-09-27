@@ -73,13 +73,13 @@ function createApi(deps) {
           includeReports: body.includeReports === true,
           includeMobility: body.includeMobility === true
         });
-        if (text === null) return notFound();
+        if (text === null) return { status: 404, json: { error: 'session_not_found' } };
         return { status: 200, text, contentType: 'text/plain; charset=utf-8' };
       }
 
       if (method === 'POST' && path === '/api/share') {
-        const share = await createShare(deps.store, request.body?.sessionId);
-        if (!share) return { status: 404, json: { error: 'no_route_to_share' } };
+        const share = await createShare(deps.store, request.body?.sessionId, request.body?.routeId);
+        if (share.error) return { status: 404, json: { error: share.error } };
         return { status: 201, json: share };
       }
 

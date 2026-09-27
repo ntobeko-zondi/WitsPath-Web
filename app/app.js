@@ -127,7 +127,7 @@ function requestRoute() {
 
   const routeLabel = `${fromNode.label || fromNode.nodeId} to ${toNode.label || toNode.nodeId}`;
   window.appElements.mapTitle.textContent = routeLabel;
-  showStatus(`Route ready • ${Math.round(totalDistance)} m`, 'success');
+  showStatus(`Route ready • ${Math.round(totalDistance)} metres`, 'success');
   renderRoute(route);
 }
 

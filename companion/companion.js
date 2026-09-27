@@ -34,7 +34,23 @@
     stopSpeaking: document.getElementById('companionStopSpeaking'),
     exportButton: document.getElementById('companionExportButton'),
     exportReports: document.getElementById('companionExportReports'),
-    exportMobility: document.getElementById('companionExportMobility')
+    exportMobility: document.getElementById('companionExportMobility'),
+    exportStatus: document.getElementById('companionExportStatus'),
+    shareDialog: document.getElementById('shareDialog'),
+    shareClose: document.getElementById('shareDialogClose'),
+    shareRoute: document.getElementById('shareDialogRoute'),
+    shareStatus: document.getElementById('shareDialogStatus'),
+    shareCreateStep: document.getElementById('shareCreateStep'),
+    shareCreate: document.getElementById('shareCreate'),
+    shareLinkStep: document.getElementById('shareLinkStep'),
+    shareLinkInput: document.getElementById('shareLinkInput'),
+    shareCopy: document.getElementById('shareCopy'),
+    shareNative: document.getElementById('shareNative'),
+    shareWhatsApp: document.getElementById('shareWhatsApp'),
+    shareEmail: document.getElementById('shareEmail'),
+    shareSms: document.getElementById('shareSms'),
+    shareExpiryNote: document.getElementById('shareExpiryNote'),
+    shareDelete: document.getElementById('shareDelete')
   };
 
   const state = {
@@ -74,6 +90,16 @@
 
   function languageName(code) {
     return state.languages[code]?.name || 'this language';
+  }
+
+  // Units are always written in full so they read (and are spoken) clearly.
+  function formatMetres(value) {
+    const metres = Math.round(value);
+    return `${metres} ${metres === 1 ? 'metre' : 'metres'}`;
+  }
+
+  function formatMinutes(value) {
+    return `${value} ${value === 1 ? 'minute' : 'minutes'}`;
   }
 
   function make(tag, className, text) {
@@ -179,7 +205,7 @@
     return badge;
   }
 
-  function addRouteCard(route) {
+  function addRouteCard(route, sessionId) {
     const item = make('li', 'companion-message companion-assistant');
     const card = make('article', 'companion-route');
     const headingId = `route-${Date.now()}`;
@@ -190,9 +216,9 @@
 
     const facts = make('p', 'companion-route-facts');
     facts.appendChild(make('span', `companion-chip ${route.accessible ? 'is-good' : 'is-warn'}`, route.accessible ? 'Step-free' : 'Not confirmed step-free'));
-    facts.appendChild(make('span', 'companion-chip', `${Math.round(route.distanceM)} m`));
+    facts.appendChild(make('span', 'companion-chip', formatMetres(route.distanceM)));
     if (route.travelTime) {
-      facts.appendChild(make('span', 'companion-chip', `about ${route.travelTime.minutes} min (estimate)`));
+      facts.appendChild(make('span', 'companion-chip', `about ${formatMinutes(route.travelTime.minutes)} (estimate)`));
     }
     card.appendChild(facts);
 
@@ -219,13 +245,16 @@
     const readButton = make('button', 'companion-secondary', 'Read steps aloud');
     readButton.type = 'button';
     readButton.addEventListener('click', () => speakSequence(route.steps.map((step) => ({ text: step.text, lang: step.lang }))));
-    const shareButton = make('button', 'companion-secondary', 'Share route');
+    const shareButton = make('button', 'companion-secondary companion-share-button');
     shareButton.type = 'button';
-    const shareResult = make('div', 'companion-share-result');
-    shareResult.setAttribute('role', 'status');
-    shareButton.addEventListener('click', () => shareRoute(shareButton, shareResult));
+    shareButton.append(shareIcon(), make('span', null, 'Share'));
+    shareButton.setAttribute('aria-haspopup', 'dialog');
+    // Remember which conversation this card came from, so sharing still
+    // targets this exact card later in the chat.
+    const shareTarget = { route, sessionId, share: null };
+    shareButton.addEventListener('click', () => openShareDialog(shareTarget, shareButton));
     actions.append(readButton, shareButton);
-    card.append(actions, shareResult);
+    card.append(actions);
 
     item.appendChild(card);
     el.log.appendChild(item);
@@ -268,7 +297,7 @@
     pending.remove();
     writePref('sessionStorage', SESSION_KEY, result.sessionId);
     addMessage('assistant', result.reply, { lang: result.language.code || undefined, language: result.language });
-    if (result.route) addRouteCard(result.route);
+    if (result.route) addRouteCard(result.route, result.sessionId);
     if (voice) recordMetric({ ...voice.timing, serverMs: Math.round(performance.now() - startedAt) });
     finishSend();
 
@@ -380,77 +409,200 @@
 
   // ---- share & export ---------------------------------------------------
 
-  async function shareRoute(button, output) {
-    button.disabled = true;
-    output.textContent = 'Creating link…';
+  // Share flow modelled on chat-sharing apps: Share -> Create link -> Copy
+  // link or send it straight to WhatsApp, email or SMS. One dialog is reused
+  // by every route card; each card remembers its own link once created.
+  const SERVER_UNREACHABLE = "Can't reach the WitsPath server. Check that it's running and your connection, then try again.";
+  const shareState = { target: null, returnFocus: null };
+
+  // "Share" icon: an arrow coming out of a box.
+  function shareIcon() {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    for (const d of ['M12 3v12', 'M7 8l5-5 5 5', 'M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7']) {
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(path);
+    }
+    return svg;
+  }
+
+  function openShareDialog(target, button) {
+    shareState.target = target;
+    shareState.returnFocus = button;
+    el.shareRoute.textContent = `${target.route.from} to ${target.route.to}`;
+    el.shareStatus.textContent = '';
+    if (target.share) showShareLink(target.share);
+    else showCreateStep();
+    el.shareDialog.showModal();
+    (target.share ? el.shareCopy : el.shareCreate).focus();
+  }
+
+  function closeShareDialog() {
+    if (el.shareDialog.open) el.shareDialog.close();
+  }
+
+  function showCreateStep() {
+    el.shareCreateStep.hidden = false;
+    el.shareLinkStep.hidden = true;
+    el.shareCreate.disabled = false;
+    el.shareCreate.textContent = 'Create link';
+  }
+
+  function showShareLink(share) {
+    const { route } = shareState.target;
+    const kind = route.accessible ? 'Step-free route' : 'Route';
+    const message = `${kind} from ${route.from} to ${route.to} on WitsPath: ${share.url}`;
+    el.shareCreateStep.hidden = true;
+    el.shareLinkStep.hidden = false;
+    el.shareLinkInput.value = share.url;
+    el.shareCopy.textContent = 'Copy link';
+    el.shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    el.shareEmail.href = `mailto:?subject=${encodeURIComponent(`WitsPath route: ${route.from} to ${route.to}`)}&body=${encodeURIComponent(message)}`;
+    el.shareSms.href = `sms:?body=${encodeURIComponent(message)}`;
+    el.shareNative.hidden = typeof navigator.share !== 'function';
+    el.shareExpiryNote.textContent = `This link works until ${new Date(share.expiresAt).toLocaleDateString()}.`;
+  }
+
+  async function createShareLink() {
+    const target = shareState.target;
+    el.shareCreate.disabled = true;
+    el.shareCreate.textContent = 'Creating link…';
+    el.shareStatus.textContent = '';
+    let response;
     try {
-      const response = await fetch('/api/share', {
+      response = await fetch('/api/share', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ sessionId: readPref('sessionStorage', SESSION_KEY, null) })
+        body: JSON.stringify({ sessionId: target.sessionId, routeId: target.route.routeId })
       });
-      if (!response.ok) throw new Error('share failed');
-      const share = await response.json();
-      writePref('localStorage', REVOKE_KEY_PREFIX + share.shareId, share.revokeToken);
-      const url = new URL(share.path, window.location.origin).href;
-
-      output.textContent = '';
-      const link = make('a', null, url);
-      link.href = url;
-      const expiry = make('p', 'companion-small', `Link works until ${new Date(share.expiresAt).toLocaleDateString()}. It shows only the route card, not this conversation.`);
-      const copy = make('button', 'companion-secondary', 'Copy link');
-      copy.type = 'button';
-      copy.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(url);
-          copy.textContent = 'Copied';
-        } catch {
-          copy.textContent = 'Copy failed: select the link instead';
-        }
-      });
-      const revoke = make('button', 'companion-secondary', 'Revoke link');
-      revoke.type = 'button';
-      revoke.addEventListener('click', async () => {
-        const result = await fetch(`/api/share/${encodeURIComponent(share.shareId)}`, {
-          method: 'DELETE',
-          headers: { 'x-revoke-token': share.revokeToken }
-        });
-        output.textContent = result.ok ? 'Link revoked. It no longer works.' : 'Could not revoke the link. Please try again.';
-        if (!result.ok) return;
-        button.disabled = false;
-      });
-      output.append(link, expiry, copy, revoke);
     } catch {
-      output.textContent = "Couldn't create a share link. Please try again.";
-      button.disabled = false;
+      el.shareStatus.textContent = SERVER_UNREACHABLE;
+      showCreateStep();
+      return;
+    }
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      el.shareStatus.textContent =
+        body.error === 'session_not_found' || body.error === 'route_not_found'
+          ? 'This route is no longer stored on the server (it may have restarted). Ask for the route again, then share the new card.'
+          : "Couldn't create a share link. Please try again.";
+      showCreateStep();
+      return;
+    }
+    const created = await response.json();
+    writePref('localStorage', REVOKE_KEY_PREFIX + created.shareId, created.revokeToken);
+    target.share = { ...created, url: new URL(created.path, window.location.origin).href };
+    showShareLink(target.share);
+    el.shareStatus.textContent = 'Link created.';
+    el.shareCopy.focus();
+  }
+
+  async function copyShareLink() {
+    const url = el.shareLinkInput.value;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard API blocked (e.g. insecure context): fall back to selection.
+      el.shareLinkInput.select();
+      if (!document.execCommand('copy')) {
+        el.shareStatus.textContent = 'Copying is blocked here. Select the link and copy it manually.';
+        return;
+      }
+    }
+    el.shareCopy.textContent = 'Copied';
+    el.shareStatus.textContent = 'Link copied. Paste it into WhatsApp, email or a text message.';
+  }
+
+  async function nativeShare() {
+    const { route, share } = shareState.target;
+    try {
+      await navigator.share({ title: `WitsPath: ${route.from} to ${route.to}`, text: `Route from ${route.from} to ${route.to} on WitsPath`, url: share.url });
+    } catch {
+      // User closed the share sheet; nothing to do.
     }
   }
 
+  async function deleteShareLink() {
+    const target = shareState.target;
+    let response;
+    try {
+      response = await fetch(`/api/share/${encodeURIComponent(target.share.shareId)}`, {
+        method: 'DELETE',
+        headers: { 'x-revoke-token': target.share.revokeToken }
+      });
+    } catch {
+      el.shareStatus.textContent = SERVER_UNREACHABLE;
+      return;
+    }
+    if (!response.ok) {
+      el.shareStatus.textContent = 'Could not delete the link. Please try again.';
+      return;
+    }
+    try {
+      window.localStorage.removeItem(REVOKE_KEY_PREFIX + target.share.shareId);
+    } catch {
+      // Storage blocked; the token is useless once the link is gone anyway.
+    }
+    target.share = null;
+    showCreateStep();
+    el.shareStatus.textContent = 'Link deleted. It no longer works for anyone.';
+    el.shareCreate.focus();
+  }
+
   async function exportConversation() {
+    const status = el.exportStatus;
     const sessionId = readPref('sessionStorage', SESSION_KEY, null);
     if (!sessionId) {
-      el.voiceStatus.textContent = 'There is no conversation to export yet.';
+      status.textContent = 'There is no conversation to export yet. Send a message first.';
       return;
     }
-    const response = await fetch('/api/companion/export', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        includeReports: el.exportReports.checked,
-        includeMobility: el.exportMobility.checked
-      })
-    });
+    status.textContent = 'Preparing download…';
+    let response;
+    try {
+      response = await fetch('/api/companion/export', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          includeReports: el.exportReports.checked,
+          includeMobility: el.exportMobility.checked
+        })
+      });
+    } catch {
+      status.textContent = SERVER_UNREACHABLE;
+      return;
+    }
     if (!response.ok) {
-      el.voiceStatus.textContent = "Couldn't export the conversation.";
+      status.textContent =
+        response.status === 404
+          ? 'This conversation is no longer stored on the server (it may have restarted), so it cannot be exported.'
+          : "Couldn't export the conversation. Please try again.";
       return;
     }
-    const blob = new Blob([await response.text()], { type: 'text/plain' });
+    const blob = new Blob([await response.text()], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'witspath-conversation.txt';
+    link.href = url;
+    const filename = `witspath-conversation-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.download = filename;
+    // Some browsers only download from links attached to the document, and
+    // cancel the download if the object URL is revoked immediately.
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    status.textContent = `Downloaded ${filename}.`;
   }
 
   // ---- startup ----------------------------------------------------------
@@ -476,6 +628,17 @@
     el.mic.addEventListener('click', toggleListening);
     el.stopSpeaking.addEventListener('click', stopSpeaking);
     el.exportButton.addEventListener('click', exportConversation);
+    el.shareCreate.addEventListener('click', createShareLink);
+    el.shareCopy.addEventListener('click', copyShareLink);
+    el.shareNative.addEventListener('click', nativeShare);
+    el.shareDelete.addEventListener('click', deleteShareLink);
+    el.shareClose.addEventListener('click', closeShareDialog);
+    el.shareLinkInput.addEventListener('focus', () => el.shareLinkInput.select());
+    // Clicking the backdrop closes the dialog, like other share sheets.
+    el.shareDialog.addEventListener('click', (event) => {
+      if (event.target === el.shareDialog) closeShareDialog();
+    });
+    el.shareDialog.addEventListener('close', () => shareState.returnFocus?.focus());
     el.langSelect.addEventListener('change', () => {
       writePref('localStorage', LANG_KEY, el.langSelect.value);
       updateLanguageNotice();

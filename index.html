@@ -214,8 +214,45 @@
           <span>Include mobility details</span>
         </label>
         <button id="companionExportButton" class="companion-secondary" type="button">Download</button>
+        <p id="companionExportStatus" class="companion-small" role="status" aria-live="polite"></p>
       </details>
     </section>
+
+    <dialog id="shareDialog" class="share-dialog" aria-labelledby="shareDialogTitle" aria-describedby="shareDialogPrivacy">
+      <div class="share-dialog-body">
+      <div class="share-dialog-header">
+        <h2 id="shareDialogTitle">Share route</h2>
+        <button id="shareDialogClose" class="companion-close" type="button" aria-label="Close share dialog">✕</button>
+      </div>
+      <p id="shareDialogRoute" class="share-dialog-route"></p>
+      <p id="shareDialogPrivacy" class="companion-small">
+        Anyone with the link can see this route card: start, destination, distance and steps. Your conversation is not
+        shared. The link expires after 30 days, and you can delete it at any time.
+      </p>
+
+      <div id="shareCreateStep">
+        <button id="shareCreate" class="companion-primary" type="button">Create link</button>
+      </div>
+
+      <div id="shareLinkStep" class="share-link-step" hidden>
+        <label for="shareLinkInput" class="companion-field"><span>Link</span></label>
+        <div class="share-link-row">
+          <input id="shareLinkInput" type="text" readonly />
+          <button id="shareCopy" class="companion-primary" type="button">Copy link</button>
+        </div>
+        <div class="share-targets" role="group" aria-label="Send the link with">
+          <button id="shareNative" class="companion-secondary" type="button" hidden>Share via…</button>
+          <a id="shareWhatsApp" class="companion-secondary" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a id="shareEmail" class="companion-secondary">Email</a>
+          <a id="shareSms" class="companion-secondary">Text message</a>
+        </div>
+        <p id="shareExpiryNote" class="companion-small"></p>
+        <button id="shareDelete" class="companion-secondary share-delete" type="button">Delete link</button>
+      </div>
+
+      <p id="shareDialogStatus" class="companion-small" role="status" aria-live="polite"></p>
+      </div>
+    </dialog>
 
     <script src="app/storage.js"></script>
     <script src="app/routing.js"></script>

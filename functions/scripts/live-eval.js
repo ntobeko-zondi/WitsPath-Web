@@ -120,7 +120,8 @@ async function main() {
   // Test 7: share flow on a real route lookup.
   const deps = freshDeps();
   const routed = await handleMessage(deps, { text: 'Accessible route from the Commerce Library to the Tower of Light please.' });
-  const share = routed.route ? await createShare(deps.store, routed.sessionId) : null;
+  const created = routed.route ? await createShare(deps.store, routed.sessionId, routed.route.routeId) : null;
+  const share = created && !created.error ? created : null;
   const card = share ? await getShare(deps.store, share.shareId) : null;
   const extraFields = card ? Object.keys(card).filter((key) => !CARD_FIELDS.includes(key)) : [];
   const shareOk = Boolean(card) && extraFields.length === 0;

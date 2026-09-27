@@ -12,6 +12,8 @@ const { newId } = require('../store/memoryStore');
 
 const SAFE_REPLY =
   "Sorry, I can't confirm that detail right now. You can still plan a route with the route planner on this page.";
+// Route cards kept per session so any recent card can be shared.
+const MAX_SHAREABLE_ROUTES = 10;
 const INCOMPLETE_REPLY = "Sorry, I couldn't finish that. Please try again, or use the route planner on this page.";
 
 class CompanionError extends Error {
@@ -55,7 +57,7 @@ async function handleMessage(deps, request) {
     transcriptJson: '[]',
     groundedNumbers: [],
     groundedDistances: [],
-    lastRoute: null,
+    routes: [],
     mobilityProfileUsed: false
   };
 
@@ -165,7 +167,7 @@ async function handleMessage(deps, request) {
   session.groundedNumbers = capGrounded(grounded);
   session.groundedDistances = [...ctx.groundedDistances];
   session.mobilityProfileUsed = session.mobilityProfileUsed || ctx.mobilityProfileUsed;
-  if (routeCard) session.lastRoute = routeCard;
+  if (routeCard) session.routes = [...(session.routes || []), routeCard].slice(-MAX_SHAREABLE_ROUTES);
   session.updatedAt = new Date();
   await store.saveSession(sessionId, session);
 
@@ -245,6 +247,8 @@ async function buildRouteCard(store, ctx, language) {
   const directions = buildDirections(route, directionsLang, templates, travelTime);
 
   return {
+    // Lets the user share this exact card, not just the latest route.
+    routeId: newId(),
     from: route.path[0].name,
     to: route.path[route.path.length - 1].name,
     fromNodeId: route.path[0].node_id,

@@ -11,6 +11,19 @@ const { NODES, makeDeps, toolUse, callsTools, says, toolResultsSentOn } = requir
 test('system prompt keeps the validated base rules verbatim', () => {
   assert.ok(SYSTEM_PROMPT.startsWith(BASE_PROMPT));
   assert.match(BASE_PROMPT, /Never invent a route, distance, or travel time/);
+  assert.match(SYSTEM_PROMPT, /units in full/);
+});
+
+test('a 1-minute estimate uses the singular phrase', async () => {
+  const deps = makeDeps([
+    callsTools(toolUse('get_route', { from_node_id: NODES.msb, to_node_id: NODES.msbLabs, accessible: true })),
+    callsTools(toolUse('get_travel_time', { distance_m: 43.1 })),
+    says('Route found. About 1 minute, as an estimate.')
+  ]);
+  const result = await handleMessage(deps, { text: 'MSB to MSB labs' });
+  const time = result.route.steps.find((step) => step.phraseKey.startsWith('estimated_time'));
+  assert.equal(time.phraseKey, 'estimated_time_one');
+  assert.equal(time.text, 'Estimated time: about 1 minute.');
 });
 
 test('uses the model named in the brief and sends tools + system prompt', async () => {
@@ -56,7 +69,7 @@ test('grounded route: numbers from tools pass, and the route card is built from 
   const deps = makeDeps([
     callsTools(toolUse('declare_language', { lang: 'en' }), toolUse('get_route', { from_node_id: NODES.msbLabs, to_node_id: NODES.genmin, accessible: true })),
     callsTools(toolUse('get_travel_time', { distance_m: 82, mobility_profile: 'wheelchair' })),
-    says('Step-free route found: 82 m, about 2 minutes (estimate). The steps are below.')
+    says('Step-free route found: 82 metres, about 2 minutes (estimate). The steps are below.')
   ]);
   const result = await handleMessage(deps, { text: 'MSB labs to Genmin?' });
 
@@ -70,7 +83,9 @@ test('grounded route: numbers from tools pass, and the route card is built from 
     result.route.steps.map((step) => step.phraseKey),
     ['route_summary', 'step_free_route', 'estimated_time', 'start_at', 'head_towards', 'arrive']
   );
-  assert.equal(result.route.steps[0].text, 'Route to Genmin Laboratories: 82 m.');
+  assert.equal(result.route.steps[0].text, 'Route to Genmin Laboratories: 82 metres.');
+  assert.equal(result.route.steps[2].text, 'Estimated time: about 2 minutes.');
+  assert.ok(result.route.routeId);
   assert.equal(result.language.code, 'en');
   assert.equal(result.language.tier, 'full');
 });
@@ -78,7 +93,7 @@ test('grounded route: numbers from tools pass, and the route card is built from 
 test('tool results from a previous turn stay grounded (follow-up travel time)', async () => {
   const deps = makeDeps([
     callsTools(toolUse('get_route', { from_node_id: NODES.msbLabs, to_node_id: NODES.genmin, accessible: true })),
-    says('Route found, 82 m.'),
+    says('Route found, 82 metres.'),
     callsTools(toolUse('get_travel_time', { distance_m: 82 })),
     says('About 2 minutes, as an estimate.')
   ]);

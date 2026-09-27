@@ -52,7 +52,7 @@ function buildDirections(route, lang, templatesByLang, travelTime) {
   say('route_summary', { place: last.name, distance: Math.round(route.distance_m) });
   say(route.accessible ? 'step_free_route' : 'not_step_free', {});
   if (travelTime && Number.isFinite(travelTime.minutes)) {
-    say('estimated_time', { minutes: travelTime.minutes });
+    say(travelTime.minutes === 1 ? 'estimated_time_one' : 'estimated_time', { minutes: travelTime.minutes });
   }
   say('start_at', { place: path[0].name });
 
