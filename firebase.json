@@ -1,0 +1,39 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "README.md",
+      "firestore.companion.rules"
+    ],
+    "rewrites": [
+      { "source": "/api/**", "function": { "functionId": "companionMessage" } },
+      { "source": "/share/**", "destination": "/share.html" },
+      { "source": "/track/**", "destination": "/track.html" },
+      { "source": "/admin", "destination": "/admin/places.html" }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }]
+      },
+      {
+        "source": "/@(share|track|admin)/**",
+        "headers": [
+          { "key": "Referrer-Policy", "value": "no-referrer" },
+          { "key": "X-Robots-Tag", "value": "noindex" }
+        ]
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "companion",
+      "ignore": ["node_modules", ".git", "test", "*.local", ".secret.local", "firebase-debug.log"]
+    }
+  ]
+}

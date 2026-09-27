@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -242,3 +243,368 @@
     <script src="app/app.js"></script>
   </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Accessible route planning for Wits University West Campus."
+    />
+    <meta name="theme-color" content="#073b67" />
+    <title>Accessible Navigation | WitsPath</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="companion/companion.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Main application header">
+        <a class="university-brand" href="#" aria-label="Wits University">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 40 48">
+              <path d="M20 2 35 8v14c0 10-6 17-15 23C11 39 5 32 5 22V8L20 2Z" />
+              <path d="M9 12h22v12H9zM9 27c5 0 7 5 11 5s6-5 11-5" />
+              <path d="M15 12v12m10-12v12M4 19H1m38 0h-3" />
+              <circle cx="20" cy="7" r="2" />
+            </svg>
+          </span>
+          <span class="university-wordmark">
+            <span class="wits-word">WITS</span>
+            <span class="university-word">UNIVERSITY</span>
+          </span>
+        </a>
+        <span class="header-divider" aria-hidden="true"></span>
+        <div class="product-title">
+          <h1>Accessible Navigation</h1>
+          <p>A more inclusive campus for everyone</p>
+        </div>
+        <div class="accessibility-actions" aria-label="Accessibility tools">
+          <button class="header-icon" id="darkModeToggle" type="button" aria-label="Switch to dark mode" title="Dark mode" aria-pressed="false">
+            <svg class="dark-mode-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.6 8.6 0 1 0 20.5 15.2Z" /></svg>
+            <svg class="dark-mode-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+          </button>
+          <button class="header-icon" id="contrastToggle" type="button" aria-label="Toggle high contrast" title="High contrast">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2" /><path d="M5 8h14M12 8v12m0-8-5 8m5-8 5 8M5 8l-2 8h6M19 8l2 8h-6" /></svg>
+          </button>
+          <button class="header-icon" id="languageButton" type="button" aria-label="Open language preferences" title="Language">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2" /><path d="M12 7v6m-6-4 6 2 6-2M8 22l4-9 4 9" /></svg>
+          </button>
+          <button class="header-icon" id="navToggle" type="button" aria-label="Open preferences" title="Visual assistance">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /><path d="m3 3 18 18" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+      <aside id="settingsDrawer" class="drawer" aria-label="Preferences panel">
+        <div class="drawer-header">
+          <h2>Preferences</h2>
+          <button id="closeDrawer" class="icon-button" type="button" aria-label="Close preferences">×</button>
+        </div>
+        <div class="drawer-section">
+          <label class="checkbox-row" for="darkModeCheckbox">
+            <input id="darkModeCheckbox" type="checkbox" />
+            <span>Dark mode</span>
+          </label>
+          <label class="field" for="languageSelect">
+            <span>Language</span>
+            <select id="languageSelect" aria-label="Select language"></select>
+          </label>
+          <label class="checkbox-row" for="stepFreeOnly">
+            <input id="stepFreeOnly" type="checkbox" />
+            <span>Step-free route only</span>
+          </label>
+          <label class="checkbox-row" for="highContrastToggle">
+            <input id="highContrastToggle" type="checkbox" />
+            <span>High contrast</span>
+          </label>
+          <label class="field" for="textSizeSelect">
+            <span>Text size</span>
+            <select id="textSizeSelect" aria-label="Select text size">
+              <option value="small">Small</option>
+              <option value="default" selected>Default</option>
+              <option value="large">Large</option>
+              <option value="huge">Huge</option>
+            </select>
+          </label>
+        </div>
+      </aside>
+
+      <main class="layout">
+        <aside class="route-panel" aria-label="Route details">
+          <div class="destination-card">
+            <span class="location-pin destination-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-8.2 8-13A8 8 0 1 0 4 9c0 4.8 8 13 8 13Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            </span>
+            <label class="location-field" for="toSelect">
+              <span class="field-caption">Destination</span>
+              <select id="toSelect" aria-label="Select destination"></select>
+              <span class="campus-name">Wits West Campus</span>
+            </label>
+          </div>
+
+          <div class="travel-modes" role="group" aria-label="Route accessibility">
+            <button class="mode-button is-selected" type="button" data-mode="wheelchair" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="4" r="2" /><path d="M10 7h4l2 5h4m-10-5-2 6h6l2 5m-7-5a5 5 0 1 0 7 5" /></svg>
+              <span>Wheelchair<br />Accessible</span>
+            </button>
+            <button class="mode-button" type="button" data-mode="visual" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+              <span>Visual<br />Assistance</span>
+            </button>
+            <button class="mode-button" type="button" data-mode="general" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2" /><path d="M12 7v6m-6-4 6 2 6-2M8 22l4-9 4 9" /></svg>
+              <span>General<br />Route</span>
+            </button>
+          </div>
+
+          <div class="route-summary">
+            <div class="summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            </div>
+            <div>
+              <span class="field-caption">Estimated time</span>
+              <p><strong id="estimatedTime">7 min</strong> <span id="estimatedDistance">(450 m)</span></p>
+            </div>
+          </div>
+
+          <div class="journey-start">
+            <span class="location-pin start-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-8.2 8-13A8 8 0 1 0 4 9c0 4.8 8 13 8 13Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            </span>
+            <label class="location-field" for="fromSelect">
+              <span class="field-caption">Start</span>
+              <select id="fromSelect" aria-label="Select starting location"></select>
+            </label>
+          </div>
+
+          <ol id="stepsList" class="steps-list" aria-live="polite" hidden></ol>
+          <p id="guidanceText" class="guidance-text" aria-live="polite">Choose a route, then start navigation to see step-by-step directions.</p>
+          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+          <button id="routeButton" class="start-navigation" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 18-9-4-9 4 9-18Z" /></svg>
+            <span>Start Navigation</span>
+          </button>
+          <button id="swapButton" class="visually-hidden" type="button">Swap start and destination</button>
+        </aside>
+
+        <section class="map-panel" aria-label="Campus route map">
+          <h2 id="mapTitle" class="visually-hidden">Select a route</h2>
+          <div id="mapViewport" class="map-viewport" tabindex="0" aria-label="Interactive Wits West Campus map">
+            <div id="mapSurface" class="map-surface">
+              <svg id="campusMap" class="campus-map-art" viewBox="0 0 647 717" role="img" aria-label="Illustrated map of Wits West Campus">
+                <defs>
+                  <pattern id="map-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                    <path d="M24 0H0V24" fill="none" stroke="#e5e8e8" stroke-width=".7" />
+                  </pattern>
+                  <filter id="building-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#667887" flood-opacity=".18" />
+                  </filter>
+                </defs>
+                <rect width="647" height="717" fill="#edf0e9" />
+                <rect width="647" height="717" fill="url(#map-grid)" />
+                <path d="M0 34 647 20M0 180l647-38M0 390l647-42M0 584l647-45M70 0l90 717M340 0l-9 717M578 0l69 717" fill="none" stroke="#d9ddd8" stroke-width="21" />
+                <path d="M0 34 647 20M0 180l647-38M0 390l647-42M0 584l647-45M70 0l90 717M340 0l-9 717M578 0l69 717" fill="none" stroke="#fbfcfa" stroke-width="16" />
+                <path d="M0 111 647 91M0 282l647-33M0 488l647-34M0 660l647-28M215 0l-27 717M472 0l20 717" fill="none" stroke="#d5ded1" stroke-width="12" />
+                <path d="M0 111 647 91M0 282l647-33M0 488l647-34M0 660l647-28M215 0l-27 717M472 0l20 717" fill="none" stroke="#fff" stroke-width="8" />
+                <path d="M12 210 121 190l46 72-32 115-102 16-31-61Zm233 4 105-20 47 68-31 87-111 6-37-67Zm200 16 121-17 56 66-32 82-121 21-42-59ZM24 476l121-30 46 70-25 101-110 24-47-81Zm213 65 115-32 47 73-36 104-108 17-42-68Zm217-24 136-29 57 68-32 92-130 20-49-66Z" fill="#dce8d8" opacity=".9" />
+                <g fill="#c9e3b8">
+                  <path d="M11 0h97l-5 45-81 9ZM253 0h71l-10 50-77 8ZM399 0h93l9 43-94 9ZM0 322l72-5 21 72-78 27ZM536 371l111-4v73l-104 13ZM356 404l72-5 12 61-79 13ZM184 616l44-8 23 68-66 41Z" />
+                </g>
+                <g fill="#aad49b" opacity=".95">
+                  <circle cx="43" cy="146" r="18" /><circle cx="99" cy="168" r="14" /><circle cx="188" cy="130" r="17" />
+                  <circle cx="291" cy="119" r="19" /><circle cx="363" cy="159" r="15" /><circle cx="560" cy="126" r="17" />
+                  <circle cx="33" cy="352" r="15" /><circle cx="183" cy="309" r="16" /><circle cx="402" cy="325" r="18" />
+                  <circle cx="551" cy="307" r="16" /><circle cx="93" cy="551" r="18" /><circle cx="393" cy="502" r="15" />
+                  <circle cx="567" cy="585" r="19" /><circle cx="280" cy="672" r="16" />
+                </g>
+                <g fill="#9bcf8d" opacity=".85">
+                  <circle cx="55" cy="138" r="7" /><circle cx="109" cy="160" r="6" /><circle cx="195" cy="122" r="7" />
+                  <circle cx="298" cy="111" r="8" /><circle cx="370" cy="152" r="6" /><circle cx="568" cy="119" r="7" />
+                  <circle cx="40" cy="344" r="6" /><circle cx="190" cy="301" r="7" /><circle cx="409" cy="317" r="7" />
+                  <circle cx="558" cy="300" r="6" /><circle cx="102" cy="543" r="7" /><circle cx="400" cy="495" r="6" />
+                </g>
+                <g class="map-building" filter="url(#building-shadow)">
+                  <path d="m99 79 92-12 18 71-106 15Z" /><path d="m226 73 91-8 16 89-91 11Z" />
+                  <path d="m392 72 126-11 17 96-126 14Z" /><path d="m21 226 116-19 17 102-121 22Z" />
+                  <path d="m215 230 115-17 25 85-113 21Z" /><path d="m431 215 162-20 21 112-159 23Z" />
+                  <path d="m76 415 121-20 23 98-132 22Z" /><path d="m245 424 105-18 26 96-109 18Z" />
+                  <path d="m431 404 139-23 23 101-143 26Z" /><path d="m82 585 102-15 21 76-111 20Z" />
+                  <path d="m248 566 125-20 18 97-131 22Z" /><path d="m440 558 142-18 25 92-146 19Z" />
+                </g>
+                <g class="building-label">
+                  <text x="151" y="108">Dj Du Plessis Centre</text>
+                  <text x="270" y="111">School of Law</text>
+                  <text x="464" y="113">Accountancy</text>
+                  <text x="77" y="271">Wits Plus</text>
+                  <text x="270" y="262">Chalsty Centre</text>
+                  <text x="511" y="264">Commerce Library</text>
+                  <text x="136" y="459">Mathematical Science</text>
+                  <text x="297" y="466">Tower of Light</text>
+                  <text x="508" y="451">Business Sciences</text>
+                  <text x="133" y="619">Flower Hall</text>
+                  <text x="311" y="610">Genmin Laboratories</text>
+                  <text x="511" y="605">Wits Arm Building</text>
+                </g>
+                <g class="campus-label">
+                  <text x="315" y="363">WEST CAMPUS</text>
+                  <text x="60" y="700">Braamfontein</text>
+                </g>
+                <circle cx="376" cy="360" r="25" fill="#d5eef6" stroke="#fff" stroke-width="5" />
+                <circle cx="376" cy="360" r="10" fill="#9bcddc" />
+                <text class="map-feature-label" x="376" y="400">Fountain</text>
+              </svg>
+              <svg id="routeOverlay" viewBox="0 0 647 717" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+            <div class="compass" aria-label="North">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 19-8-4-8 4 8-19Z" /></svg>
+              <span>N</span>
+            </div>
+            <div class="map-tools" aria-label="Map controls">
+              <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+              <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+              <button id="resetView" type="button" aria-label="Reset map view" title="Reset map view">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 1v3m0 16v3M1 12h3m16 0h3" /></svg>
+              </button>
+            </div>
+            <div class="map-legend" aria-label="Map legend">
+              <div><span class="legend-line"></span><span>Suggested route</span></div>
+              <div><span class="legend-marker start-marker"></span><span>Start</span></div>
+              <div><span class="legend-marker destination-marker"></span><span>Destination</span></div>
+              <div><span class="accessible-marker">♿</span><span>Accessible entrance</span></div>
+              <div><span class="legend-block ramp-block"></span><span>Ramp / accessible path</span></div>
+              <div><span class="legend-block stairs-block"></span><span>Stairs (avoid if needed)</span></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <button
+      id="companionLauncher"
+      class="companion-launcher"
+      type="button"
+      aria-expanded="false"
+      aria-controls="companionPanel"
+      hidden
+    >
+      Ask WitsPath
+    </button>
+
+    <section
+      id="companionPanel"
+      class="companion-panel"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="companionTitle"
+      hidden
+    >
+      <header class="companion-header">
+        <h2 id="companionTitle">WitsPath Companion</h2>
+        <button id="companionClose" class="companion-close" type="button" aria-label="Close companion">✕</button>
+      </header>
+
+      <div class="companion-settings">
+        <label class="companion-field" for="companionLang">
+          <span>Reply language</span>
+          <select id="companionLang">
+            <option value="">Detect from my message</option>
+          </select>
+        </label>
+        <label class="companion-check" for="companionSpeak">
+          <input id="companionSpeak" type="checkbox" />
+          <span>Read replies aloud</span>
+        </label>
+      </div>
+      <p id="companionLangNotice" class="companion-badge companion-badge-limited" role="status" hidden></p>
+      <a class="companion-secondary companion-trip-link" href="/trip.html">Share my live trip</a>
+
+      <ol id="companionLog" class="companion-log" role="log" aria-live="polite" aria-label="Conversation">
+        <li class="companion-message companion-assistant">
+          <p class="companion-text">Hi! Tell me where you want to go on campus, or report a blocked path. You can type or press Speak.</p>
+        </li>
+      </ol>
+
+      <form id="companionForm" class="companion-form">
+        <label for="companionInput" class="visually-hidden">Message</label>
+        <textarea
+          id="companionInput"
+          rows="2"
+          maxlength="1000"
+          placeholder="e.g. How do I get to the Commerce Library?"
+        ></textarea>
+        <div class="companion-actions">
+          <button id="companionMic" class="companion-secondary" type="button" aria-pressed="false">Speak</button>
+          <button id="companionSend" class="companion-primary" type="submit">Send</button>
+        </div>
+        <p id="companionVoiceStatus" class="companion-small" role="status" aria-live="polite"></p>
+        <button id="companionStopSpeaking" class="companion-secondary" type="button" hidden>Stop reading aloud</button>
+      </form>
+
+      <details class="companion-export">
+        <summary>Export conversation</summary>
+        <p class="companion-small">
+          Downloads this conversation as a text file. Issue-report details and mentions of mobility needs are removed
+          unless you include them below.
+        </p>
+        <label class="companion-check" for="companionExportReports">
+          <input id="companionExportReports" type="checkbox" />
+          <span>Include issue-report details</span>
+        </label>
+        <label class="companion-check" for="companionExportMobility">
+          <input id="companionExportMobility" type="checkbox" />
+          <span>Include mobility details</span>
+        </label>
+        <button id="companionExportButton" class="companion-secondary" type="button">Download</button>
+        <p id="companionExportStatus" class="companion-small" role="status" aria-live="polite"></p>
+      </details>
+    </section>
+
+    <dialog id="shareDialog" class="share-dialog" aria-labelledby="shareDialogTitle" aria-describedby="shareDialogPrivacy">
+      <div class="share-dialog-body">
+      <div class="share-dialog-header">
+        <h2 id="shareDialogTitle">Share route</h2>
+        <button id="shareDialogClose" class="companion-close" type="button" aria-label="Close share dialog">✕</button>
+      </div>
+      <p id="shareDialogRoute" class="share-dialog-route"></p>
+      <p id="shareDialogPrivacy" class="companion-small">
+        Anyone with the link can see this route card: start, destination, distance and steps. Your conversation is not
+        shared. The link expires after 30 days, and you can delete it at any time.
+      </p>
+
+      <div id="shareCreateStep">
+        <button id="shareCreate" class="companion-primary" type="button">Create link</button>
+      </div>
+
+      <div id="shareLinkStep" class="share-link-step" hidden>
+        <label for="shareLinkInput" class="companion-field"><span>Link</span></label>
+        <div class="share-link-row">
+          <input id="shareLinkInput" type="text" readonly />
+          <button id="shareCopy" class="companion-primary" type="button">Copy link</button>
+        </div>
+        <div class="share-targets" role="group" aria-label="Send the link with">
+          <button id="shareNative" class="companion-secondary" type="button" hidden>Share via…</button>
+          <a id="shareWhatsApp" class="companion-secondary" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a id="shareEmail" class="companion-secondary">Email</a>
+          <a id="shareSms" class="companion-secondary">Text message</a>
+        </div>
+        <p id="shareExpiryNote" class="companion-small"></p>
+        <button id="shareDelete" class="companion-secondary share-delete" type="button">Delete link</button>
+      </div>
+
+      <p id="shareDialogStatus" class="companion-small" role="status" aria-live="polite"></p>
+      </div>
+    </dialog>
+
+    <script src="app/storage.js"></script>
+    <script src="app/routing.js"></script>
+    <script src="app/map.js"></script>
+    <script src="app/app.js"></script>
+    <script src="companion/speech.js"></script>
+    <script src="companion/companion.js"></script>
+  </body>
+</html>
+>>>>>>> 0d20464a2253b7892412f13760e51bcbb4ea5fbd

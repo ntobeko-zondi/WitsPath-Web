@@ -1,0 +1,18 @@
+node_modules/
+
+# Secrets - never commit. Production secrets live in Firebase Secrets
+# (firebase functions:secrets:set ...).
+.env
+.env.*
+!.env.example
+*.local
+.secret.local
+.runtimeconfig.json
+
+# Local dev data (team-pinned places while developing)
+.dev-data/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log

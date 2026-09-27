@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Shared route · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/companion/companion.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub">Shared route</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout share-layout">
+        <section class="panel" aria-labelledby="shareTitle">
+          <h1 id="shareTitle" class="share-title">Loading route…</h1>
+          <p id="shareStatus" role="status" aria-live="polite"></p>
+          <div id="shareCard" hidden>
+            <p id="shareFacts" class="companion-route-facts"></p>
+            <ol id="shareSteps" class="companion-steps"></ol>
+            <p id="shareExpiry" class="companion-small"></p>
+            <p class="companion-small">
+              Directions come from the WitsPath campus map. Conditions change: check for blocked paths before you go.
+            </p>
+            <div class="companion-card-actions">
+              <a class="companion-secondary share-link-button" href="/">Open WitsPath</a>
+              <button id="shareRevoke" class="companion-secondary" type="button" hidden>Revoke this link</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <style>
+      .share-layout {
+        grid-template-columns: minmax(0, 720px);
+        justify-content: center;
+      }
+      .share-title {
+        margin: 0 0 0.75rem;
+        font-size: 1.4rem;
+      }
+      .share-link-button {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+      }
+    </style>
+    <script src="/companion/share-page.js"></script>
+  </body>
+</html>
