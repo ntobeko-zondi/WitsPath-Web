@@ -3,8 +3,13 @@ function renderRoute(route) {
   svg.innerHTML = '';
 
   if (!route || route.length < 2) {
+    window.appState.navigationStarted = false;
     window.appElements.guidanceText.textContent = 'Choose your start and destination to begin.';
+    window.appElements.guidanceText.classList.remove('visually-hidden');
     window.appElements.stepsList.innerHTML = '';
+    window.appElements.stepsList.hidden = true;
+    window.appElements.estimatedTime.textContent = '—';
+    window.appElements.estimatedDistance.textContent = '';
     return;
   }
 
@@ -47,38 +52,63 @@ function renderRoute(route) {
     if (index === route.length - 1) {
       return {
         title: `Arrive at ${node.label || node.nodeId}`,
-        subtitle: 'Destination reached',
-        index: index + 1
+        subtitle: 'Main entrance',
+        index: index + 1,
+        isArrival: true
       };
     }
 
     const nextNode = route[index + 1];
     const distance = computeDistance(node, nextNode, true);
     return {
-      title: `Walk ${Math.round(distance)}m to ${nextNode.label || nextNode.nodeId}`,
-      subtitle: node.label || node.nodeId,
-      index: index + 1
+      title: `Continue for ${Math.round(distance)} m`,
+      subtitle: `Follow the accessible path toward ${nextNode.label || nextNode.nodeId}`,
+      index: index + 1,
+      isArrival: false
     };
   });
 
   window.appElements.guidanceText.textContent = `Total route length: ${Math.round(totalDistance)}m`;
-  window.appElements.stepsList.innerHTML = stepDetails
-    .map(
-      (step) => `
+  const navigationStarted = window.appState.navigationStarted;
+  window.appElements.stepsList.hidden = !navigationStarted;
+  window.appElements.guidanceText.classList.toggle('visually-hidden', navigationStarted);
+  window.appElements.guidanceText.textContent = navigationStarted
+    ? `Total route length: ${Math.round(totalDistance)}m`
+    : 'Route ready. Press Start Navigation to see step-by-step directions.';
+  window.appElements.stepsList.innerHTML = navigationStarted
+    ? stepDetails
+        .map(
+          (step) => `
         <li>
           <span class="step-index">${step.index}</span>
+          <span class="step-icon" aria-hidden="true">
+            ${
+              step.isArrival
+                ? '<svg viewBox="0 0 24 24"><path d="M6 21V4m0 1h12l-3 4 3 4H6" /></svg>'
+                : '<svg viewBox="0 0 24 24"><path d="M12 21V4m-7 7 7-7 7 7" /></svg>'
+            }
+          </span>
           <div class="step-copy">
             <strong>${step.title}</strong>
             <small>${step.subtitle}</small>
           </div>
         </li>
       `
-    )
-    .join('');
+        )
+        .join('')
+    : '';
 }
 
 function resetMapView() {
-  window.appState.mapScale = 1;
+  const viewportWidth = window.appElements.mapViewport.clientWidth;
+  const viewportHeight = window.appElements.mapViewport.clientHeight;
+  const surfaceWidth = window.appElements.mapSurface.offsetWidth || 647;
+  const surfaceHeight = window.appElements.mapSurface.offsetHeight || 717;
+  window.appState.mapScale = Math.min(
+    viewportWidth / surfaceWidth,
+    viewportHeight / surfaceHeight,
+    window.appState.maxScale
+  );
   window.appState.mapX = 0;
   window.appState.mapY = 0;
   applyMapTransform();
@@ -88,10 +118,16 @@ function applyMapTransform() {
   const scale = Math.min(Math.max(window.appState.mapScale, window.appState.minScale), window.appState.maxScale);
   const viewportWidth = window.appElements.mapViewport.clientWidth;
   const viewportHeight = window.appElements.mapViewport.clientHeight;
-  const surfaceWidth = window.appState.floor ? window.appState.floor.imageWidth : 647;
-  const surfaceHeight = window.appState.floor ? window.appState.floor.imageHeight : 717;
-  const x = Math.min(0, Math.max(window.appState.mapX, viewportWidth - surfaceWidth * scale));
-  const y = Math.min(0, Math.max(window.appState.mapY, viewportHeight - surfaceHeight * scale));
+  const surfaceWidth = window.appElements.mapSurface.offsetWidth || 647;
+  const surfaceHeight = window.appElements.mapSurface.offsetHeight || 717;
+  const scaledWidth = surfaceWidth * scale;
+  const scaledHeight = surfaceHeight * scale;
+  const x = scaledWidth <= viewportWidth
+    ? (viewportWidth - scaledWidth) / 2
+    : Math.min(0, Math.max(window.appState.mapX, viewportWidth - scaledWidth));
+  const y = scaledHeight <= viewportHeight
+    ? (viewportHeight - scaledHeight) / 2
+    : Math.min(0, Math.max(window.appState.mapY, viewportHeight - scaledHeight));
   window.appState.mapX = x;
   window.appState.mapY = y;
   window.appElements.mapSurface.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
