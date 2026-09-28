@@ -155,6 +155,33 @@ test('transcription endpoint reports 501 when Vulavula is not configured', async
   assert.equal(response.status, 501);
 });
 
+test('/api/route: route planner gets the engine route with map points and verified steps', async () => {
+  const deps = makeDeps([]);
+  const api = apiFor(deps);
+  const ok = await api({
+    method: 'POST',
+    path: '/api/route',
+    headers: {},
+    body: { fromNodeId: NODES.msbLabs, toNodeId: NODES.genmin, accessible: true, lang: 'zu', speedMultiplier: 5 }
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.distanceM, 82);
+  assert.deepEqual(ok.json.travelTime, { minutes: 2, basis: 'estimate' });
+  assert.equal(ok.json.points.length, 2);
+  assert.ok(Number.isFinite(ok.json.points[0].x) && Number.isFinite(ok.json.points[0].y));
+  assert.deepEqual(ok.json.edgeIds, ['eg_mu84s1hg1n']);
+  assert.equal(ok.json.directionsLang, 'zu');
+  assert.ok(ok.json.steps.every((step) => step.lang === 'en')); // no verified isiZulu yet
+  // Out-of-range walking speed is clamped before it reaches the engine.
+  assert.equal(deps.engine.requests[0].speed_multiplier, 2);
+
+  const none = await api({ method: 'POST', path: '/api/route', headers: {}, body: { fromNodeId: NODES.flowerHall, toNodeId: NODES.lawClinic } });
+  assert.equal(none.status, 422);
+  assert.equal(none.json.error, 'no_route');
+  const bad = await api({ method: 'POST', path: '/api/route', headers: {}, body: { fromNodeId: 'nope', toNodeId: NODES.genmin } });
+  assert.equal(bad.status, 400);
+});
+
 test('unknown API routes 404', async () => {
   const api = apiFor(makeDeps([]));
   assert.equal((await api({ method: 'GET', path: '/api/nope', headers: {} })).status, 404);

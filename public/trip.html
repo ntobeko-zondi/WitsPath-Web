@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Share my live trip · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub">Live trip</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout">
+        <section class="panel page-panel" aria-labelledby="tripTitle">
+          <h1 id="tripTitle">Share my live trip</h1>
+
+          <!-- Step 1: set up -->
+          <form id="tripSetup" class="page-form">
+            <p class="companion-small">
+              Let someone follow you on a map until you arrive. They'll see messages like "Lindiwe is on the way to the
+              Commerce Library" and "Lindiwe has arrived".
+            </p>
+            <label class="companion-field" for="tripName">
+              <span>Your name (shown to people following you)</span>
+              <input id="tripName" type="text" maxlength="40" autocomplete="given-name" required />
+            </label>
+            <label class="companion-field" for="tripCampus">
+              <span>Campus</span>
+              <select id="tripCampus"></select>
+            </label>
+            <label class="companion-field" for="tripPlace">
+              <span>Where are you going?</span>
+              <select id="tripPlace" required></select>
+            </label>
+            <p id="tripNoPlaces" class="companion-badge companion-badge-limited" hidden>
+              No destinations have been pinned on this campus yet. The WitsPath team adds them in the admin page.
+            </p>
+
+            <h2>Before you start</h2>
+            <ul class="page-consent">
+              <li>Anyone with the link can see your approximate location on a map and your name.</li>
+              <li>Only your latest position is kept. It is deleted when you arrive or stop.</li>
+              <li>Sharing stops automatically when you arrive, or after 2 hours.</li>
+              <li>Keep this page open. Sharing pauses if you close it or lock your phone.</li>
+            </ul>
+            <button id="tripStart" class="companion-primary" type="submit">Start sharing my location</button>
+            <p id="tripSetupStatus" class="companion-small" role="status" aria-live="polite"></p>
+          </form>
+
+          <!-- Step 2: sharing -->
+          <div id="tripActive" class="page-form" hidden>
+            <p id="tripLiveIndicator" class="page-live-indicator">Sharing live location</p>
+            <ul id="tripSenderStatus" class="page-status" aria-live="polite"></ul>
+
+            <h2>Send the link</h2>
+            <div class="share-link-row">
+              <label for="tripLinkInput" class="visually-hidden">Live trip link</label>
+              <input id="tripLinkInput" type="text" readonly />
+              <button id="tripCopy" class="companion-primary" type="button">Copy link</button>
+            </div>
+            <div class="share-targets" role="group" aria-label="Send the link with">
+              <button id="tripNativeShare" class="companion-secondary" type="button" hidden>Share via…</button>
+              <a id="tripWhatsApp" class="companion-secondary" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <a id="tripEmail" class="companion-secondary">Email</a>
+              <a id="tripSms" class="companion-secondary">Text message</a>
+            </div>
+
+            <label class="companion-check" for="tripKeepAwake" id="tripKeepAwakeRow" hidden>
+              <input id="tripKeepAwake" type="checkbox" checked />
+              <span>Keep my screen on while sharing</span>
+            </label>
+
+            <div class="page-actions">
+              <button id="tripArrived" class="companion-primary" type="button">I've arrived</button>
+              <button id="tripStop" class="companion-secondary" type="button">Stop sharing</button>
+            </div>
+            <p id="tripActionStatus" class="companion-small" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- Step 3: finished -->
+          <div id="tripDone" class="page-form" hidden>
+            <p id="tripDoneMessage" class="page-status" role="status" tabindex="-1"></p>
+            <a class="companion-secondary" href="/trip.html" style="text-decoration: none; justify-self: start">Share another trip</a>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Map">
+          <div id="tripMap" class="page-map"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/vendor/leaflet-1.9.4/leaflet.js"></script>
+    <script src="/js/tracking/map-adapter.js"></script>
+    <script src="/js/tracking/trip.js"></script>
+  </body>
+</html>

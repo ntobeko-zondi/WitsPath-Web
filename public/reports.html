@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>My reports · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub" data-i18n="nav_my_reports">My reports</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout single">
+        <section class="panel page-panel" aria-labelledby="reportsTitle">
+          <h1 id="reportsTitle" data-i18n="nav_my_reports">My reports</h1>
+          <p class="companion-small" data-i18n="report_issue_hint">
+            This segment of your route will be flagged for other users once 3 people report the same issue.
+          </p>
+          <p id="reportsStatus" class="companion-small" role="status" aria-live="polite">Loading…</p>
+          <p id="reportsSignIn" hidden>
+            <span data-i18n="my_reports_sign_in_prompt">Sign in to see your submitted reports and their status.</span>
+            <a href="/login.html?next=/reports.html" data-i18n="nav_log_in">Log in</a>
+          </p>
+          <ul id="reportsList" class="page-places" aria-labelledby="reportsTitle"></ul>
+
+          <form id="newReportForm" class="page-form" aria-labelledby="newReportTitle" hidden>
+            <h2 id="newReportTitle">Report a problem at a place</h2>
+            <label class="companion-field" for="newReportPlace">
+              <span>Where?</span>
+              <select id="newReportPlace" required></select>
+            </label>
+            <fieldset>
+              <legend>What's wrong?</legend>
+              <label class="companion-check"><input type="radio" name="newReportType" value="broken_lift" /> <span data-i18n="broken_lift">Broken lift</span></label>
+              <label class="companion-check"><input type="radio" name="newReportType" value="blocked_or_broken_ramp" /> <span data-i18n="blocked_or_broken_ramp">Blocked or broken ramp</span></label>
+              <label class="companion-check"><input type="radio" name="newReportType" value="path_obstructed" checked /> <span data-i18n="path_obstructed">Path obstructed</span></label>
+              <label class="companion-check"><input type="radio" name="newReportType" value="other" /> <span data-i18n="other">Other</span></label>
+            </fieldset>
+            <label class="companion-field" for="newReportDescription">
+              <span>Details (optional)</span>
+              <textarea id="newReportDescription" rows="3" maxlength="500"></textarea>
+            </label>
+            <p class="companion-small">
+              To flag a path for everyone, report it from a route on the home page so we know exactly which path it is.
+            </p>
+            <button id="newReportSubmit" class="companion-primary" type="submit">Send report</button>
+            <p id="newReportStatus" class="page-status" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/places/campus-places.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/reports.js"></script>
+  </body>
+</html>

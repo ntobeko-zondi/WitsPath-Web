@@ -2,21 +2,44 @@
 
 // Local development server: serves the website and the same /api/** routes as
 // the Cloud Function, backed by the in-memory store seeded from
-// data/wits-west-map.json. Run: npm run dev   (from functions/)
+// public/data/wits-west-map.json. Run: npm run dev   (from functions/)
 //
 // Reads secrets from functions/.secret.local (git-ignored, never deployed -
 // unlike functions/.env, which Firebase uploads with the function) and
-// non-secret settings from functions/.env. Routing defaults to the
-// PLACEHOLDER fixture mode here; production defaults to 'unavailable'.
+// non-secret settings from functions/.env.
+//
+// Routing: if the shared routing engine has been built (routing/build.ps1 or
+// routing/build.sh) and ROUTING_MODE isn't set, it is started automatically
+// on ROUTING_PORT (8081) and used. Otherwise routes are unavailable.
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 for (const file of ['.secret.local', '.env']) {
   if (fs.existsSync(path.join(__dirname, file))) process.loadEnvFile(path.join(__dirname, file));
 }
-process.env.ROUTING_MODE = process.env.ROUTING_MODE || 'fixture';
+
+const ROUTING_JAR = path.resolve(__dirname, '..', 'routing', 'build', 'witspath-routing.jar');
+const ROUTING_PORT = Number(process.env.ROUTING_PORT || 8081);
+let routingProcess = null;
+if (!process.env.ROUTING_MODE && fs.existsSync(ROUTING_JAR)) {
+  routingProcess = spawn('java', ['-jar', ROUTING_JAR], {
+    env: { ...process.env, PORT: String(ROUTING_PORT) },
+    stdio: ['ignore', 'inherit', 'inherit']
+  });
+  routingProcess.on('error', (error) => console.error(`Could not start the routing engine (is Java installed?): ${error.message}`));
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+      routingProcess.kill();
+      process.exit(0);
+    });
+  }
+  process.on('exit', () => routingProcess.kill());
+  process.env.ROUTING_MODE = 'http';
+  process.env.ROUTING_SERVICE_URL = `http://localhost:${ROUTING_PORT}/v1/route`;
+}
 
 const Anthropic = require('@anthropic-ai/sdk');
 const config = require('./src/config');
@@ -27,12 +50,12 @@ const { createRoutingService } = require('./src/routing/routingService');
 const { CompanionError } = require('./src/companion/companion');
 
 const PORT = Number(process.env.PORT || 5173);
-const SITE_ROOT = path.resolve(__dirname, '..');
-// Only these paths are public - mirrors the hosting config, so functions/,
-// .env and scripts are never served.
-const PUBLIC_FILES = new Set(['/index.html', '/share.html', '/trip.html', '/track.html']);
-const PUBLIC_DIRS = ['/app/', '/css/', '/data/', '/companion/', '/tracking/', '/vendor/', '/admin/'];
+// Everything the browser may load lives in public/ (same as Firebase Hosting),
+// so server code, secrets and scripts can never be served.
+const SITE_ROOT = path.resolve(__dirname, '..', 'public');
 const MIME = {
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -75,8 +98,29 @@ const routing = createRoutingService({
   mode: config.ROUTING_MODE,
   url: config.ROUTING_SERVICE_URL,
   timeoutMs: config.ROUTING_TIMEOUT_MS,
-  store
+  auth: config.ROUTING_SERVICE_AUTH
 });
+
+// Real Firebase sign-ins work locally too: verifying an ID token only needs
+// the project id (Google's signing keys are public), no service account.
+// Set FIREBASE_PROJECT_ID in functions/.env (e.g. wavelets-wits-nav). Users'
+// profiles and preferences are kept in memory on the dev server.
+let devAuth = null;
+async function verifyDevUser(headers) {
+  const match = /^Bearer (.+)$/.exec(headers.authorization || '');
+  if (!process.env.FIREBASE_PROJECT_ID || !match) return null;
+  if (!devAuth) {
+    const { initializeApp } = require('firebase-admin/app');
+    const { getAuth } = require('firebase-admin/auth');
+    devAuth = getAuth(initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID }, 'dev-auth'));
+  }
+  try {
+    const token = await devAuth.verifyIdToken(match[1]);
+    return { uid: token.uid, email: token.email || null, name: token.name || null };
+  } catch {
+    return null;
+  }
+}
 
 let anthropic = null;
 const api = createApi({
@@ -92,7 +136,7 @@ const api = createApi({
   },
   getVulavulaKey: () => process.env.VULAVULA_API_KEY || '',
   getAdminToken: () => process.env.ADMIN_API_TOKEN || '',
-  verifyUser: async () => null
+  verifyUser: verifyDevUser
 });
 
 function readBody(req) {
@@ -119,9 +163,8 @@ function serveStatic(urlPath, res) {
   if (/^\/track\/[^/]+$/.test(filePath)) filePath = '/track.html';
   if (filePath === '/admin' || filePath === '/admin/') filePath = '/admin/places.html';
 
-  const allowed = PUBLIC_FILES.has(filePath) || PUBLIC_DIRS.some((dir) => filePath.startsWith(dir));
   const absolute = path.resolve(SITE_ROOT, `.${filePath}`);
-  if (!allowed || !absolute.startsWith(SITE_ROOT + path.sep) || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+  if (!absolute.startsWith(SITE_ROOT + path.sep) || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
     res.writeHead(404, { 'content-type': 'text/plain' });
     res.end('Not found');
     return;
@@ -178,7 +221,13 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`WitsPath dev server: http://localhost:${PORT}`);
-  console.log(`Routing mode: ${config.ROUTING_MODE} (${routing.source})`);
+  console.log(
+    routingProcess
+      ? `Routing: shared engine started on port ${ROUTING_PORT}`
+      : config.ROUTING_MODE === 'http'
+        ? `Routing: shared engine at ${config.ROUTING_SERVICE_URL}`
+        : 'Routing: unavailable - build the engine with routing/build.ps1 (Windows) or routing/build.sh (JDK 11+ needed)'
+  );
   if (!process.env.ANTHROPIC_API_KEY) console.log('ANTHROPIC_API_KEY not set - companion replies will return 503.');
   console.log(
     process.env.ADMIN_API_TOKEN

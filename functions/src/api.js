@@ -8,6 +8,10 @@ const { publicLanguageList, isKnownLanguage } = require('./language/languages');
 const { PHRASE_KEYS, isVerified } = require('./directions/phrases');
 const { publicCampuses, validatePlace, isUsable, publicPlace, isAdmin } = require('./places/campusPlaces');
 const { createTrip, recordLocation, endTrip, viewTrip } = require('./tracking/trips');
+const { runTool } = require('./tools/handlers');
+const { buildRouteCard, estimateMinutes } = require('./routing/routeCard');
+const { fileReport, listMyReports } = require('./reports/reports');
+const { getProfile, saveProfile, savePreferences } = require('./users/users');
 
 // Target end-to-end latency for a voice round trip (speech in -> spoken reply
 // starts). The widget measures against this; see test case 4.
@@ -22,7 +26,7 @@ const VOICE_LATENCY_BUDGET_MS = 8000;
  *   getAnthropic(): Anthropic client (created lazily from the server secret),
  *   getVulavulaKey(): string | '',
  *   getAdminToken(): string | ''     // enables /api/admin/** when set
- *   verifyUser(headers): Promise<string | null>   // Firebase Auth uid, optional
+ *   verifyUser(headers): Promise<{uid, email, name} | null>   // Firebase Auth ID token claims
  * }
  * request: { method, path, query, headers, body, rawBody }
  * returns: { status, json } | { status, text, contentType } | { status }
@@ -64,10 +68,74 @@ function createApi(deps) {
             inputMode: body.inputMode === 'voice' ? 'voice' : 'text',
             inputLang: isKnownLanguage(body.inputLang) ? body.inputLang : null,
             preferredLang: isKnownLanguage(body.preferredLang) ? body.preferredLang : null,
-            userId: await deps.verifyUser(request.headers)
+            speedMultiplier: clampSpeedMultiplier(body.speedMultiplier),
+            routeOptions: routeOptionsFrom(body),
+            userId: (await deps.verifyUser(request.headers))?.uid || null
           }
         );
         return { status: 200, json: result };
+      }
+
+      // Route planner: same engine, same checks and same verified directions
+      // as the companion, without the model.
+      if (method === 'POST' && path === '/api/route') {
+        const body = request.body || {};
+        const ctx = {
+          store: deps.store,
+          routing: deps.routing,
+          log,
+          groundedRoutes: [],
+          speedMultiplier: clampSpeedMultiplier(body.speedMultiplier),
+          routeOptions: routeOptionsFrom(body)
+        };
+        const result = await runTool(
+          'get_route',
+          { from_node_id: body.fromNodeId, to_node_id: body.toNodeId, accessible: body.accessible !== false },
+          ctx
+        );
+        if (result.error) {
+          const status = result.error === 'invalid_input' || result.error === 'unknown_place' ? 400 : 422;
+          return { status, json: { error: result.error, message: result.message } };
+        }
+        const card = await buildRouteCard(deps.store, ctx.route, isKnownLanguage(body.lang) ? body.lang : null, {
+          minutes: estimateMinutes(ctx.route.estimated_seconds)
+        });
+        return { status: 200, json: card };
+      }
+
+      // ---- accounts (same users/{uid} documents as the Android app) --------
+
+      if (path === '/api/me' || path.startsWith('/api/me/') || path.startsWith('/api/reports')) {
+        const claims = await deps.verifyUser(request.headers);
+        if (!claims) return { status: 401, json: { error: 'sign_in_required' } };
+        const body = request.body || {};
+
+        if (method === 'GET' && path === '/api/me') {
+          return { status: 200, json: await getProfile(deps.store, claims) };
+        }
+        if (method === 'PUT' && path === '/api/me/profile') {
+          const result = await saveProfile(deps.store, claims, body);
+          return result.error ? { status: 400, json: result } : { status: 200, json: result };
+        }
+        if (method === 'PUT' && path === '/api/me/preferences') {
+          const result = await savePreferences(deps.store, claims, body.preferences);
+          return result.error ? { status: 400, json: result } : { status: 200, json: result };
+        }
+        if (method === 'POST' && path === '/api/reports') {
+          const result = await fileReport(deps.store, {
+            userId: claims.uid,
+            target: body.target,
+            issueType: body.issueType,
+            description: body.description,
+            source: 'web'
+          });
+          if (result.error) return { status: 400, json: result };
+          return { status: 201, json: result };
+        }
+        if (method === 'GET' && path === '/api/reports/mine') {
+          return { status: 200, json: { reports: await listMyReports(deps.store, claims.uid) } };
+        }
+        return notFound();
       }
 
       if (method === 'POST' && path === '/api/companion/export') {
@@ -173,6 +241,24 @@ function createApi(deps) {
 
 function notFound() {
   return { status: 404, json: { error: 'not_found' } };
+}
+
+const MOBILITY_PROFILES = ['none', 'wheelchair', 'walking_aid', 'low_vision'];
+
+/** Route preferences from the user's settings (Android ids for the profile). */
+function routeOptionsFrom(body) {
+  return {
+    mobilityProfile: MOBILITY_PROFILES.includes(body.mobilityProfile) ? body.mobilityProfile : 'none',
+    preferLifts: body.preferLifts === true,
+    avoidSteepRamps: body.avoidSteepRamps === true
+  };
+}
+
+/** The user's walking-speed setting, bounded; 1 when missing or invalid. */
+function clampSpeedMultiplier(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 1;
+  return Math.min(config.SPEED_MULTIPLIER_MAX, Math.max(config.SPEED_MULTIPLIER_MIN, number));
 }
 
 /**

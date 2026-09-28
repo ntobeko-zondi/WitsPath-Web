@@ -1,14 +1,7 @@
 {
   "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**",
-      "functions/**",
-      "README.md",
-      "firestore.companion.rules"
-    ],
+    "public": "public",
+    "ignore": ["**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/api/**", "function": { "functionId": "companionMessage" } },
       { "source": "/share/**", "destination": "/share.html" },
@@ -33,7 +26,7 @@
     {
       "source": "functions",
       "codebase": "companion",
-      "ignore": ["node_modules", ".git", "test", "*.local", ".secret.local", "firebase-debug.log"]
+      "ignore": ["node_modules", ".git", "test", "*.local", ".secret.local", ".dev-data", "firebase-debug.log"]
     }
   ]
 }

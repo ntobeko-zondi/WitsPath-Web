@@ -9,16 +9,16 @@ const { buildSeedTemplates } = require('../directions/phrases');
  * and tests. Same method surface as FirestoreStore.
  */
 class MemoryStore {
-  constructor({ graph, aliases = {}, fixtures = [], phraseRows = buildSeedTemplates() }) {
+  constructor({ graph, aliases = {}, phraseRows = buildSeedTemplates() }) {
     this.graph = graph;
     this.places = derivePlaces(graph, aliases);
-    this.fixtures = fixtures;
     this.pathStatus = [];
     this.reports = new Map();
     this.sessions = new Map();
     this.sharedRoutes = new Map();
     this.campusPlaces = new Map();
     this.trips = new Map();
+    this.users = new Map();
     this.templates = {};
     for (const row of phraseRows) {
       this.templates[row.lang] = this.templates[row.lang] || {};
@@ -51,20 +51,46 @@ class MemoryStore {
     return id;
   }
 
+  async listReportsByUser(userId) {
+    return [...this.reports.entries()].filter(([, r]) => r.userId === userId).map(([id, r]) => ({ id, ...r }));
+  }
+
+  async listReportsForEdge(edgeId) {
+    return [...this.reports.entries()].filter(([, r]) => r.edgeId === edgeId).map(([id, r]) => ({ id, ...r }));
+  }
+
+  async getEdge(edgeId) {
+    const edge = this.graph.edges.find((item) => item.edgeId === edgeId);
+    return edge ? { ...edge } : null;
+  }
+
+  // Changes the live graph, as a Firestore edges/{id} update would.
+  async setEdgeStatus(edgeId, status) {
+    const edge = this.graph.edges.find((item) => item.edgeId === edgeId);
+    if (edge) edge.status = status;
+  }
+
+  async getUser(uid) {
+    const user = this.users.get(uid);
+    return user ? structuredClone(user) : null;
+  }
+
+  // Same semantics as Firestore set(..., { merge: true }): nested maps merge.
+  async mergeUser(uid, patch) {
+    const current = this.users.get(uid) || {};
+    this.users.set(uid, {
+      ...current,
+      ...structuredClone(patch),
+      preferences: { ...(current.preferences || {}), ...(patch.preferences || {}) }
+    });
+  }
+
   async getPhraseTemplates(langs) {
     const result = {};
     for (const lang of langs) {
       result[lang] = this.templates[lang] || {};
     }
     return result;
-  }
-
-  async getRouteFixture(fromNodeId, toNodeId) {
-    for (const fixture of this.fixtures) {
-      if (fixture.from === fromNodeId && fixture.to === toNodeId) return [...fixture.path];
-      if (fixture.from === toNodeId && fixture.to === fromNodeId) return [...fixture.path].reverse();
-    }
-    return null;
   }
 
   async getSession(id) {

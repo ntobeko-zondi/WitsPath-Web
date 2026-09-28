@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log in · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub" data-i18n="nav_log_in">Log in</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout single">
+        <section class="panel page-panel" aria-labelledby="loginTitle">
+          <h1 id="loginTitle" data-i18n="login_title">Welcome back</h1>
+          <p class="companion-small" data-i18n="login_subtitle">Sign in so your saved places and accessibility settings follow you.</p>
+          <p id="accountsOff" class="companion-badge companion-badge-limited" hidden>
+            Accounts are not set up on this site yet. You can keep using WitsPath without an account.
+          </p>
+
+          <form id="loginForm" class="page-form" novalidate>
+            <label class="companion-field" for="loginEmail">
+              <span data-i18n="field_email">Email address</span>
+              <input id="loginEmail" type="text" inputmode="email" autocomplete="username" required />
+            </label>
+            <label class="companion-field" for="loginPassword">
+              <span data-i18n="field_password">Password</span>
+              <input id="loginPassword" type="password" autocomplete="current-password" required />
+            </label>
+            <button id="loginSubmit" class="companion-primary" type="submit" data-i18n="login_button">Log in</button>
+            <button id="loginForgot" class="companion-secondary" type="button" data-i18n="login_forgot_password">Forgot password?</button>
+            <p id="loginStatus" class="companion-small" role="alert"></p>
+          </form>
+
+          <p class="companion-small">
+            <span data-i18n="login_no_account">Don't have an account?</span>
+            <a href="/signup.html" data-i18n="nav_sign_up">Sign up</a>
+          </p>
+          <a class="companion-secondary page-link-button" href="/" data-i18n="login_continue_guest">Continue as guest</a>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/login.js"></script>
+  </body>
+</html>

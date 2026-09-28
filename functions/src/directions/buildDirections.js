@@ -45,7 +45,10 @@ function classifyTurn(prev, via, next) {
  */
 function buildDirections(route, lang, templatesByLang, travelTime) {
   const steps = [];
-  const say = (key, params) => steps.push(renderPhrase(key, params, lang, templatesByLang));
+  // pointIndex: the route point a navigation step is at or heads to (null for
+  // summary lines), so step-by-step navigation can show "you are here".
+  const say = (key, params, pointIndex = null) =>
+    steps.push({ ...renderPhrase(key, params, lang, templatesByLang), pointIndex });
   const path = route.path;
   const last = path[path.length - 1];
 
@@ -54,7 +57,7 @@ function buildDirections(route, lang, templatesByLang, travelTime) {
   if (travelTime && Number.isFinite(travelTime.minutes)) {
     say(travelTime.minutes === 1 ? 'estimated_time_one' : 'estimated_time', { minutes: travelTime.minutes });
   }
-  say('start_at', { place: path[0].name });
+  say('start_at', { place: path[0].name }, 0);
 
   for (let i = 1; i < path.length; i += 1) {
     const from = path[i - 1];
@@ -62,18 +65,18 @@ function buildDirections(route, lang, templatesByLang, travelTime) {
     const distance = Math.round(route.segments[i - 1].distance_m);
 
     if (from.type === 'ramp') {
-      say('use_ramp', { place: from.name });
+      say('use_ramp', { place: from.name }, i - 1);
     }
 
     if (i === 1) {
-      say('head_towards', { place: to.name, distance });
+      say('head_towards', { place: to.name, distance }, i);
     } else {
       const key = hasCoordinates(path[i - 2], from, to) ? classifyTurn(path[i - 2], from, to) : 'continue_to';
-      say(key, { place: to.name, distance });
+      say(key, { place: to.name, distance }, i);
     }
   }
 
-  say('arrive', { place: last.name });
+  say('arrive', { place: last.name }, path.length - 1);
 
   return {
     steps,

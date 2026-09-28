@@ -1,0 +1,454 @@
+/* WitsPath Companion widget. Built on the site's colour tokens so it follows
+   the high-contrast theme; the colours below were chosen for WCAG AA text
+   contrast (4.5:1 or better) in both themes. */
+
+:root {
+  --companion-accent: var(--wits-blue-700); /* Wits blue #003b7e on white: 11:1 */
+  --companion-warn-bg: #fff4dc;
+  --companion-warn-ink: #6b4700; /* 7.9:1 on warn-bg */
+  --companion-good-bg: #e3f5ec;
+  --companion-good-ink: #0d5c39; /* 7.3:1 on good-bg */
+  --companion-user-bg: var(--wits-blue-100);
+}
+
+body[data-contrast="true"] {
+  --companion-accent: #8cc2ff;
+  --companion-warn-bg: #3a2a00;
+  --companion-warn-ink: #ffd98a;
+  --companion-good-bg: #0c3322;
+  --companion-good-ink: #9ff0c7;
+  --companion-user-bg: #1b3358;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.companion-launcher {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  min-height: 3rem;
+  padding: 0.8rem 1.3rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--wits-blue-700);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.companion-launcher:disabled {
+  background: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.companion-panel {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.25rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: min(420px, calc(100vw - 2rem));
+  max-height: min(78vh, 760px);
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+}
+
+/* The panel scrolls as a whole; children keep their natural height so the
+   log never collapses underneath the form. */
+.companion-panel > * {
+  flex-shrink: 0;
+}
+
+.companion-panel[hidden],
+.companion-launcher[hidden] {
+  display: none;
+}
+
+.companion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.companion-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.companion-close {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.companion-settings {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.companion-field {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.companion-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.companion-check input {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.companion-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  min-height: 6rem;
+}
+
+.companion-message {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.companion-user {
+  justify-self: end;
+  max-width: 88%;
+  background: var(--companion-user-bg);
+}
+
+.companion-assistant {
+  max-width: 100%;
+}
+
+.companion-text {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.companion-badge {
+  margin: 0.5rem 0 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  background: var(--panel-strong);
+  color: var(--ink);
+}
+
+.companion-badge-limited,
+.companion-badge-unsupported,
+.companion-badge-unconfirmed {
+  background: var(--companion-warn-bg);
+  color: var(--companion-warn-ink);
+}
+
+.companion-badge-limited::before,
+.companion-badge-unsupported::before {
+  content: "⚠ ";
+}
+
+.companion-route h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.companion-route-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.4rem;
+}
+
+.companion-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.companion-chip.is-good {
+  background: var(--companion-good-bg);
+  color: var(--companion-good-ink);
+}
+
+.companion-chip.is-warn {
+  background: var(--companion-warn-bg);
+  color: var(--companion-warn-ink);
+}
+
+.companion-steps {
+  margin: 0.6rem 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: 0.3rem;
+  line-height: 1.45;
+}
+
+.companion-card-actions,
+.companion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.companion-share-result {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.companion-share-result a {
+  color: var(--companion-accent);
+}
+
+.companion-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.companion-form textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.companion-primary,
+.companion-secondary {
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.8rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.companion-primary {
+  flex: 1;
+  border: 2px solid transparent;
+  background: var(--wits-blue-700);
+  color: #ffffff;
+}
+
+.companion-secondary {
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+  color: var(--ink);
+}
+
+.companion-secondary[aria-pressed="true"] {
+  background: var(--companion-warn-bg);
+  color: var(--companion-warn-ink);
+  border-color: var(--companion-warn-ink);
+}
+
+.companion-primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.companion-small {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.companion-export summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.3rem 0;
+}
+
+.companion-export {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.companion-export[open] {
+  padding-bottom: 0.25rem;
+}
+
+.companion-export > * + * {
+  margin-top: 0.5rem;
+}
+
+.companion-trip-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.companion-share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Share dialog. Padding lives on the inner body so a click on the dialog
+   element itself is always a backdrop click. */
+.share-dialog {
+  width: min(460px, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.share-dialog::backdrop {
+  background: rgba(9, 19, 33, 0.55);
+}
+
+.share-dialog-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.1rem;
+}
+
+.share-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.share-dialog-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.share-dialog-route {
+  margin: 0;
+  font-weight: 700;
+}
+
+.share-link-step {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.share-link-step[hidden],
+#shareCreateStep[hidden] {
+  display: none;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.share-link-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.share-link-row .companion-primary {
+  flex: 0 0 auto;
+}
+
+.share-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.share-targets a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.share-targets [hidden] {
+  display: none;
+}
+
+.share-delete {
+  justify-self: start;
+}
+
+.companion-launcher:focus-visible,
+.share-dialog a:focus-visible,
+.share-dialog input:focus-visible,
+.companion-close:focus-visible,
+.companion-primary:focus-visible,
+.companion-secondary:focus-visible,
+.companion-panel select:focus-visible,
+.companion-panel textarea:focus-visible,
+.companion-panel input:focus-visible,
+.companion-export summary:focus-visible,
+.companion-share-result a:focus-visible {
+  outline: 3px solid var(--companion-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .companion-panel {
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: 4.75rem;
+    width: auto;
+    max-height: 80vh;
+  }
+
+  .companion-launcher {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .companion-panel,
+  .companion-launcher {
+    transition: none;
+  }
+}

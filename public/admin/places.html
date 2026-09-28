@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Campus places admin · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub">Campus places admin</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout">
+        <section class="panel page-panel" aria-labelledby="adminTitle">
+          <h1 id="adminTitle">Campus places</h1>
+
+          <form id="adminLogin" class="page-form">
+            <p class="companion-small">
+              Pinned places become live-trip destinations immediately, so pin the exact door people should go to. Put a
+              separate pin on each accessible entrance.
+            </p>
+            <label class="companion-field" for="adminToken">
+              <span>Admin token</span>
+              <input id="adminToken" type="password" autocomplete="off" required />
+            </label>
+            <button class="companion-primary" type="submit">Continue</button>
+            <p id="adminLoginStatus" class="companion-small" role="status" aria-live="polite"></p>
+          </form>
+
+          <div id="adminWork" class="page-form" hidden>
+            <label class="companion-field" for="adminCampus">
+              <span>Campus</span>
+              <select id="adminCampus"></select>
+            </label>
+
+            <h2 id="adminListTitle">Pinned places</h2>
+            <ul id="adminPlaces" class="page-places" aria-labelledby="adminListTitle"></ul>
+
+            <form id="adminForm" class="page-form" aria-labelledby="adminFormTitle">
+              <h2 id="adminFormTitle">Add a place</h2>
+              <p class="companion-small">Click the map to drop a pin, then drag it into place. You can also type the coordinates.</p>
+              <label class="companion-field" for="placeName">
+                <span>Name</span>
+                <input id="placeName" type="text" maxlength="80" required />
+              </label>
+              <label class="companion-field" for="placeKind">
+                <span>Kind</span>
+                <select id="placeKind">
+                  <option value="building">Building (main entrance)</option>
+                  <option value="accessible_entrance">Accessible entrance</option>
+                  <option value="entrance">Other entrance</option>
+                  <option value="lift">Lift</option>
+                  <option value="ramp">Ramp</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <fieldset>
+                <legend>Step-free access at this pin?</legend>
+                <label class="companion-check"><input type="radio" name="placeAccessible" value="true" /> Yes, checked</label>
+                <label class="companion-check"><input type="radio" name="placeAccessible" value="false" /> No</label>
+                <label class="companion-check"><input type="radio" name="placeAccessible" value="unknown" checked /> Not checked</label>
+              </fieldset>
+              <div class="page-row">
+                <label class="companion-field" for="placeLat">
+                  <span>Latitude</span>
+                  <input id="placeLat" type="number" step="0.0000001" required />
+                </label>
+                <label class="companion-field" for="placeLng">
+                  <span>Longitude</span>
+                  <input id="placeLng" type="number" step="0.0000001" required />
+                </label>
+              </div>
+              <label class="companion-field" for="placeAliases">
+                <span>Other names (comma separated)</span>
+                <input id="placeAliases" type="text" />
+              </label>
+              <label class="companion-field" for="placeNode">
+                <span>WitsPath map node id (optional)</span>
+                <input id="placeNode" type="text" maxlength="40" placeholder="e.g. nd_mu83zm0ga" />
+              </label>
+              <label class="companion-field" for="placeNotes">
+                <span>Notes for the team</span>
+                <textarea id="placeNotes" rows="2" maxlength="300"></textarea>
+              </label>
+              <label class="companion-field" for="placePinnedBy">
+                <span>Pinned by (your name)</span>
+                <input id="placePinnedBy" type="text" maxlength="80" required />
+              </label>
+              <div class="page-actions">
+                <button id="placeSave" class="companion-primary" type="submit">Save place</button>
+                <button id="placeCancel" class="companion-secondary" type="button">Clear</button>
+              </div>
+              <p id="adminStatus" class="companion-small" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Map">
+          <div id="adminMap" class="page-map"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/vendor/leaflet-1.9.4/leaflet.js"></script>
+    <script src="/js/tracking/map-adapter.js"></script>
+    <script src="/js/admin/places.js"></script>
+  </body>
+</html>

@@ -34,8 +34,10 @@ function isEdgeStepFree(edge) {
   return cost < 999 && !stairsOnly;
 }
 
+// Same rule as the routing engine: only "ok" edges are usable ("flagged" by
+// reports and "blocked" are not).
 function isEdgeBlocked(edge) {
-  return edge.status === 'blocked';
+  return String(edge.status || 'ok').toLowerCase() !== 'ok';
 }
 
 module.exports = { indexGraph, isEdgeStepFree, isEdgeBlocked };

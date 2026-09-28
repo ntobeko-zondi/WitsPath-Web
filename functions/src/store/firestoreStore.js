@@ -64,6 +64,37 @@ class FirestoreStore {
     return ref.id;
   }
 
+  // No orderBy: equality + orderBy on another field needs a composite index;
+  // callers sort. Capped to keep reads bounded.
+  async listReportsByUser(userId) {
+    const snapshot = await this.db.collection(COLLECTIONS.reports).where('userId', '==', userId).limit(200).get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...toPlain(doc.data()) }));
+  }
+
+  async listReportsForEdge(edgeId) {
+    const snapshot = await this.db.collection(COLLECTIONS.reports).where('edgeId', '==', edgeId).limit(500).get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...toPlain(doc.data()) }));
+  }
+
+  async getEdge(edgeId) {
+    const doc = await this.db.collection(COLLECTIONS.graphEdges).doc(edgeId).get();
+    return doc.exists ? { edgeId: doc.id, ...doc.data() } : null;
+  }
+
+  async setEdgeStatus(edgeId, status) {
+    await this.db.collection(COLLECTIONS.graphEdges).doc(edgeId).update({ status });
+    this.graphCache = null; // routes must see the change immediately
+  }
+
+  async getUser(uid) {
+    const doc = await this.db.collection(COLLECTIONS.users).doc(uid).get();
+    return doc.exists ? toPlain(doc.data()) : null;
+  }
+
+  async mergeUser(uid, patch) {
+    await this.db.collection(COLLECTIONS.users).doc(uid).set(patch, { merge: true });
+  }
+
   async getPhraseTemplates(langs) {
     const result = {};
     await Promise.all(
@@ -80,15 +111,6 @@ class FirestoreStore {
       })
     );
     return result;
-  }
-
-  async getRouteFixture(fromNodeId, toNodeId) {
-    const collection = this.db.collection(COLLECTIONS.routeFixtures);
-    const forward = await collection.where('from', '==', fromNodeId).where('to', '==', toNodeId).limit(1).get();
-    if (!forward.empty) return forward.docs[0].data().path;
-    const reverse = await collection.where('from', '==', toNodeId).where('to', '==', fromNodeId).limit(1).get();
-    if (!reverse.empty) return [...reverse.docs[0].data().path].reverse();
-    return null;
   }
 
   async getSession(id) {

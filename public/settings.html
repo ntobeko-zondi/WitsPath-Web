@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub" data-i18n="nav_settings">Settings</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout single">
+        <section class="panel page-panel" aria-labelledby="settingsTitle">
+          <h1 id="settingsTitle" data-i18n="nav_settings">Settings</h1>
+          <p id="syncNote" class="companion-small">Settings are saved on this device.</p>
+
+          <form id="settingsForm" class="page-form">
+            <fieldset>
+              <legend data-i18n="nav_accessibility">Accessibility</legend>
+              <label class="companion-field" for="settingTextSize">
+                <span data-i18n="settings_text_size_title">Text size</span>
+                <select id="settingTextSize">
+                  <option value="small" data-i18n="text_size_small">Small</option>
+                  <option value="default" data-i18n="text_size_default">Default</option>
+                  <option value="large" data-i18n="text_size_large">Large</option>
+                  <option value="huge" data-i18n="text_size_huge">Huge</option>
+                </select>
+              </label>
+              <label class="companion-check" for="settingContrast">
+                <input id="settingContrast" type="checkbox" />
+                <span data-i18n="settings_high_contrast_title">High contrast</span>
+              </label>
+              <label class="companion-field" for="settingDark">
+                <span data-i18n="settings_dark_theme_title">Dark mode</span>
+                <select id="settingDark">
+                  <option value="system">Follow my device</option>
+                  <option value="on">On</option>
+                  <option value="off">Off</option>
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Routes</legend>
+              <label class="companion-check" for="settingStepFree">
+                <input id="settingStepFree" type="checkbox" />
+                <span data-i18n="settings_step_free_title">Step-free routes only</span>
+              </label>
+              <label class="companion-check" for="settingLifts">
+                <input id="settingLifts" type="checkbox" />
+                <span data-i18n="settings_prefer_lifts_title">Prefer lifts over ramps</span>
+              </label>
+              <label class="companion-check" for="settingSteep">
+                <input id="settingSteep" type="checkbox" />
+                <span data-i18n="settings_avoid_steep_title">Avoid steep ramps</span>
+              </label>
+              <small class="companion-small">
+                Lifts and steep ramps are used where the campus map records them; most paths don't have that detail yet.
+              </small>
+              <label class="companion-field" for="settingSpeed">
+                <span>Walking or wheeling speed</span>
+                <input id="settingSpeed" type="range" min="0.5" max="1.5" step="0.1" aria-describedby="settingSpeedValue settingSpeedHelp" />
+                <output id="settingSpeedValue" for="settingSpeed"></output>
+                <small id="settingSpeedHelp" class="companion-small">
+                  Adjusts travel-time estimates. Your mobility profile sets the starting speed (wheelchair 0.8, walking aid
+                  and low vision 1.1, otherwise 1.4 metres per second); this makes it faster or slower.
+                </small>
+              </label>
+            </fieldset>
+
+            <fieldset aria-describedby="profileHelp">
+              <legend data-i18n="settings_mobility_profile_title">Mobility profile</legend>
+              <label class="companion-check"><input type="radio" name="settingProfile" value="none" /> <span data-i18n="mobility_none">No preference</span></label>
+              <label class="companion-check"><input type="radio" name="settingProfile" value="wheelchair" /> <span data-i18n="mobility_wheelchair">Wheelchair</span></label>
+              <label class="companion-check"><input type="radio" name="settingProfile" value="walking_aid" /> <span data-i18n="mobility_walking_aid">Walking aid</span></label>
+              <label class="companion-check"><input type="radio" name="settingProfile" value="low_vision" /> <span data-i18n="mobility_low_vision">Low vision</span></label>
+              <small id="profileHelp" class="companion-small">Never shown to other people.</small>
+            </fieldset>
+
+            <fieldset>
+              <legend data-i18n="nav_language">Language</legend>
+              <label class="companion-field" for="settingLanguage">
+                <span data-i18n="settings_language_title">Interface language</span>
+                <select id="settingLanguage"></select>
+              </label>
+            </fieldset>
+
+            <fieldset id="syncGroup" hidden>
+              <legend data-i18n="settings_section_account">Account</legend>
+              <label class="companion-check" for="settingSync">
+                <input id="settingSync" type="checkbox" />
+                <span>Sync my settings with my WitsPath account (website and Android app)</span>
+              </label>
+            </fieldset>
+          </form>
+          <p id="settingsStatus" class="companion-small" role="status" aria-live="polite"></p>
+          <a class="companion-secondary page-link-button" href="/saved.html" data-i18n="nav_saved_places">Saved places</a>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/settings-page.js"></script>
+  </body>
+</html>
