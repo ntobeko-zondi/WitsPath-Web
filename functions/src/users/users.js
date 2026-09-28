@@ -18,6 +18,8 @@ const PREFERENCE_VALIDATORS = {
   pref_avoid_steep_ramps: (value) => typeof value === 'boolean',
   pref_prefer_lifts: (value) => typeof value === 'boolean',
   pref_high_contrast: (value) => typeof value === 'boolean',
+  // Android WitsPathApplication reads "pref_dark_theme".
+  pref_dark_theme: (value) => typeof value === 'boolean',
   pref_text_size: (value) => TEXT_SIZES.includes(value),
   pref_sync_enabled: (value) => typeof value === 'boolean',
   // Android keeps this as a string in SharedPreferences ("1.0").

@@ -69,6 +69,7 @@ function createApi(deps) {
             inputLang: isKnownLanguage(body.inputLang) ? body.inputLang : null,
             preferredLang: isKnownLanguage(body.preferredLang) ? body.preferredLang : null,
             speedMultiplier: clampSpeedMultiplier(body.speedMultiplier),
+            routeOptions: routeOptionsFrom(body),
             userId: (await deps.verifyUser(request.headers))?.uid || null
           }
         );
@@ -84,7 +85,8 @@ function createApi(deps) {
           routing: deps.routing,
           log,
           groundedRoutes: [],
-          speedMultiplier: clampSpeedMultiplier(body.speedMultiplier)
+          speedMultiplier: clampSpeedMultiplier(body.speedMultiplier),
+          routeOptions: routeOptionsFrom(body)
         };
         const result = await runTool(
           'get_route',
@@ -239,6 +241,17 @@ function createApi(deps) {
 
 function notFound() {
   return { status: 404, json: { error: 'not_found' } };
+}
+
+const MOBILITY_PROFILES = ['none', 'wheelchair', 'walking_aid', 'low_vision'];
+
+/** Route preferences from the user's settings (Android ids for the profile). */
+function routeOptionsFrom(body) {
+  return {
+    mobilityProfile: MOBILITY_PROFILES.includes(body.mobilityProfile) ? body.mobilityProfile : 'none',
+    preferLifts: body.preferLifts === true,
+    avoidSteepRamps: body.avoidSteepRamps === true
+  };
 }
 
 /** The user's walking-speed setting, bounded; 1 when missing or invalid. */

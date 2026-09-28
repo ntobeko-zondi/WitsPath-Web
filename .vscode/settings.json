@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^git -c core\\.whitespace=cr-at-eol diff --check$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

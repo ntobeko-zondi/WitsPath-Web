@@ -15,6 +15,23 @@ public final class TravelTimeConfig
     /** Default walking speed in metres per second. */
     public static final double DEFAULT_SPEED_MPS = 1.4;
 
+    /**
+     * Typical speed per mobility profile, from the website team's planner.
+     * "none" keeps the Android default above.
+     */
+    public static double speedFor(String mobilityProfile)
+    {
+        if (RouteOptions.WHEELCHAIR.equals(mobilityProfile))
+        {
+            return 0.8;
+        }
+        if (RouteOptions.WALKING_AID.equals(mobilityProfile) || RouteOptions.LOW_VISION.equals(mobilityProfile))
+        {
+            return 1.1;
+        }
+        return DEFAULT_SPEED_MPS;
+    }
+
     /** Fixed overhead in seconds for building entry/exit and orientation. */
     public static final int OVERHEAD_SECONDS = 30;
 

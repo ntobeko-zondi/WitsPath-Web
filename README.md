@@ -159,6 +159,16 @@ Merge `firestore.companion.rules` into the Android project's rules. Every compan
 | 7 | Share flow | Deterministic + verified in the browser (create, view, revoke). |
 | 8 | Key not in bundle | `npm run check:bundle`: passing locally. Re-run against the deployed URL. |
 
+## Home page
+
+The home page uses the team's redesign: header and page navigation, a destination card, travel-mode buttons, an estimated-time summary, and a map with zoom controls and a legend.
+
+- **Travel modes** set the mobility profile: Wheelchair, Walking aid, Visual assistance or General. Wheelchair and Visual assistance are step-free. The shared routing engine applies the profile rules: per-profile costs, avoiding stairs for walking aids, "prefer lifts" and "avoid steep ramps". Travel time uses a per-profile speed: wheelchair 0.8, walking aid and low vision 1.1, otherwise 1.4 metres per second, times the walking-speed setting.
+- **The route updates** when you change a place or mode. **Start Navigation** shows the step-by-step directions.
+- **The home button** next to Start fills in your home base. Like the Android app's "auto-detect", it doesn't use GPS: the West Campus map has no GPS reference points yet.
+- **The map** is the real campus image from the Android app, so route lines sit on the right buildings. (The illustrated SVG from the redesign had building labels in different places from the route data.)
+- **Dark mode** (Settings, or follows the device) uses the Android night palette. **High contrast** is black and yellow.
+
 ## Accounts and reports (shared with the Android app)
 
 The website signs in with the same Firebase accounts as the Android app (project `wavelets-wits-nav`) and reads and writes the same documents:

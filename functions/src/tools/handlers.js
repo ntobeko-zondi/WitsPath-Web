@@ -72,7 +72,8 @@ async function getRoute(input, ctx) {
     toNodeId: input.to_node_id,
     accessible: input.accessible,
     graph,
-    speedMultiplier: ctx.speedMultiplier
+    speedMultiplier: ctx.speedMultiplier,
+    options: ctx.routeOptions
   });
   if (route.error) {
     return { ...route, instruction: "Tell the user you can't confirm a route right now. Do not describe one." };

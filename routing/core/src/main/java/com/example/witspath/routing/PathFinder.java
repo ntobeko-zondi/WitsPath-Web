@@ -15,12 +15,17 @@ import java.util.Set;
  * shared by the Android app and the website's routing service.
  *
  * Extracted from the Android app's model/PathFinder.java with the same
- * algorithm: cost = edge distance in metres, straight-line heuristic in
- * metres, ties broken by node index, edges whose status is not "ok" are
- * skipped, and accessible mode skips stairs-only edges.
+ * algorithm: straight-line heuristic in metres, ties broken by node index,
+ * edges whose status is not "ok" are skipped, and step-free mode skips
+ * stairs-only edges. aStarSearch(src, goal, accessible) behaves as before.
  *
- * One addition, from the graph data's schema note: in accessible mode an
- * edge with accessibilityCost >= 999 is impassable (see Edge.isStepFree).
+ * Additions:
+ *  - From the graph schema note: cost = distance x accessibilityCost, and
+ *    accessibilityCost >= 999 is impassable step-free (Edge.isStepFree).
+ *    (All current data has cost 1, so today's routes are unchanged.)
+ *  - From the website team's planner (RouteOptions): mobility profiles with
+ *    optional per-profile costs and inaccessible edges, "prefer lifts" and
+ *    "avoid steep ramps". See edgeCost.
  *
  * errorMessage is per instance (it was static in the Android version, which
  * is unsafe when several searches run at once).
@@ -64,7 +69,8 @@ public class PathFinder
         return errorMessage;
     }
 
-    List<Edge> getSuccessors(Node node, boolean requireAccessible)
+    /** Edges this person can use from a node. */
+    List<Edge> getSuccessors(Node node, RouteOptions options)
     {
         List<Edge> result = new ArrayList<>();
         for (Edge e : node.edges)
@@ -73,12 +79,48 @@ public class PathFinder
             {
                 continue;
             }
-            if (!requireAccessible || e.isStepFree())
+            if (options.stepFree && !e.isStepFree())
             {
-                result.add(e);
+                continue;
             }
+            // accessibilityCost >= 999 only closes an edge for step-free routing
+            // (graph schema note, handled by isStepFree above); a profile's own
+            // cost of >= 999 closes it for that profile.
+            Double profileCost = e.profileCosts.get(options.dataKey());
+            boolean closedForProfile = profileCost != null && profileCost >= Edge.IMPASSABLE_COST;
+            if (closedForProfile || e.inaccessibleFor.contains(options.mobilityProfile))
+            {
+                continue;
+            }
+            if (options.avoidSteepRamps && e.ramp && e.steepRamp)
+            {
+                continue;
+            }
+            result.add(e);
         }
         return result;
+    }
+
+    /**
+     * Search cost of an edge: distance x the profile's cost multiplier, with
+     * the website planner's preferences. Every factor is >= 1 so the
+     * straight-line heuristic never overestimates and A* stays optimal:
+     *   - walking aid: stairs-only edges x 1.5
+     *   - prefer lifts: lifts x 1, plain edges x 4/3, ramps x 1.8 (the same
+     *     order as the planner's 0.75 / 1 / 1.35, scaled so nothing is below 1)
+     */
+    double edgeCost(Edge e, RouteOptions options)
+    {
+        double cost = e.distance * Math.max(1.0, e.costFor(options));
+        if (RouteOptions.WALKING_AID.equals(options.mobilityProfile) && e.isStairsOnly())
+        {
+            cost *= 1.5;
+        }
+        if (options.preferLifts)
+        {
+            cost *= e.elevator ? 1.0 : e.ramp ? 1.35 / 0.75 : 1.0 / 0.75;
+        }
+        return cost;
     }
 
     double calculateHValue(Node node, Node goal)
@@ -110,6 +152,11 @@ public class PathFinder
      *         route (see getErrorMessage) or src == goal.
      */
     public LinkedList<Node> aStarSearch(Node src, Node goal, boolean requireAccessible)
+    {
+        return aStarSearch(src, goal, RouteOptions.accessible(requireAccessible));
+    }
+
+    public LinkedList<Node> aStarSearch(Node src, Node goal, RouteOptions options)
     {
         errorMessage = "";
         if (src == goal)
@@ -147,7 +194,7 @@ public class PathFinder
                 return tracePath(details, src, goal);
             }
 
-            for (Edge edge : getSuccessors(currentNode, requireAccessible))
+            for (Edge edge : getSuccessors(currentNode, options))
             {
                 Node neighbour = currentNode.other(edge);
                 if (neighbour == null || closedSet.contains(neighbour))
@@ -155,7 +202,7 @@ public class PathFinder
                     continue;
                 }
 
-                double gNew = Objects.requireNonNull(details.get(currentNode)).g + edge.distance;
+                double gNew = Objects.requireNonNull(details.get(currentNode)).g + edgeCost(edge, options);
                 double hNew = calculateHValue(neighbour, goal);
                 double fNew = gNew + hNew;
 
@@ -171,7 +218,7 @@ public class PathFinder
             }
         }
 
-        errorMessage = requireAccessible
+        errorMessage = options.stepFree
                 ? "Failed to find an accessible route to the destination node "
                         + "(a path may exist, but only via stairs with no ramp/elevator)."
                 : "Failed to find the destination node.";

@@ -16,14 +16,22 @@
     el('settingLanguage').appendChild(option);
   });
 
+  // Same base speeds as the routing engine (TravelTimeConfig.speedFor).
+  const BASE_SPEED = { wheelchair: 0.8, walking_aid: 1.1, low_vision: 1.1, none: 1.4 };
+
   function speedLabel(value) {
-    return `${Number(value).toFixed(1)}× (${(1.4 * value).toFixed(1)} metres per second)`;
+    const base = BASE_SPEED[settings.get('mobilityProfile')] || 1.4;
+    return `${Number(value).toFixed(1)}× (${(base * value).toFixed(1)} metres per second)`;
   }
 
   function render() {
     el('settingTextSize').value = settings.get('textSize');
     el('settingContrast').checked = settings.get('highContrast');
     el('settingStepFree').checked = settings.get('stepFreeOnly');
+    el('settingLifts').checked = settings.get('preferLifts');
+    el('settingSteep').checked = settings.get('avoidSteepRamps');
+    const dark = settings.get('darkMode');
+    el('settingDark').value = dark === null ? 'system' : dark ? 'on' : 'off';
     el('settingSpeed').value = settings.get('walkingSpeed');
     el('settingSpeedValue').textContent = speedLabel(settings.get('walkingSpeed'));
     el('settingSpeed').setAttribute('aria-valuetext', speedLabel(settings.get('walkingSpeed')));
@@ -47,6 +55,9 @@
   bind('settingTextSize', 'textSize', (t) => t.value);
   bind('settingContrast', 'highContrast', (t) => t.checked);
   bind('settingStepFree', 'stepFreeOnly', (t) => t.checked);
+  bind('settingLifts', 'preferLifts', (t) => t.checked);
+  bind('settingSteep', 'avoidSteepRamps', (t) => t.checked);
+  bind('settingDark', 'darkMode', (t) => (t.value === 'system' ? null : t.value === 'on'));
   bind('settingSpeed', 'walkingSpeed', (t) => Number(t.value));
   bind('settingLanguage', 'language', (t) => t.value);
   bind('settingSync', 'syncEnabled', (t) => t.checked);

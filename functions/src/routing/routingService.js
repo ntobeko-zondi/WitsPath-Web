@@ -44,7 +44,7 @@ class HttpRoutingService {
     this.auth = auth || 'none';
   }
 
-  async getRoute({ fromNodeId, toNodeId, accessible, graph, speedMultiplier }) {
+  async getRoute({ fromNodeId, toNodeId, accessible, graph, speedMultiplier, options = {} }) {
     let response;
     let body;
     try {
@@ -58,7 +58,10 @@ class HttpRoutingService {
           from_node_id: fromNodeId,
           to_node_id: toNodeId,
           accessible,
-          speed_multiplier: speedMultiplier || 1
+          speed_multiplier: speedMultiplier || 1,
+          mobility_profile: options.mobilityProfile || 'none',
+          prefer_lifts: Boolean(options.preferLifts),
+          avoid_steep_ramps: Boolean(options.avoidSteepRamps)
         }),
         signal: AbortSignal.timeout(this.timeoutMs)
       });

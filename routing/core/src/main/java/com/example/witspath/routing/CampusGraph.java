@@ -76,14 +76,16 @@ public class CampusGraph
                 graph.warnings.add("Edge " + edgeId + " references an unknown node");
                 continue;
             }
-            graph.edges.put(edgeId, new Edge(
+            Edge edge = new Edge(
                     edgeId, from, to,
                     requireNumber(e, "distance", edgeId),
                     number(e, "accessibilityCost", 1.0),
-                    bool(e, "ramp"), bool(e, "stairs"), bool(e, "elevator"),
+                    bool(e, "ramp"), bool(e, "stairs"), bool(e, "elevator") || bool(e, "lift"),
                     string(e, "status", "ok"),
                     string(e, "label", ""),
-                    string(e, "uphillFrom", null)));
+                    string(e, "uphillFrom", null));
+            readProfileData(edge, e);
+            graph.edges.put(edgeId, edge);
         }
 
         return graph;
@@ -125,6 +127,38 @@ public class CampusGraph
             }
         }
         return null;
+    }
+
+    /**
+     * Optional per-profile data (field names from the website team's planner):
+     *   accessibilityCosts (or accessibilityCostByProfile): { wheelchair, walkingAid, lowVision, noPreference }
+     *   steepRamp: true (or steep: true, or rampGrade: "steep")
+     *   inaccessibleFor: ["wheelchair", "walking_aid", ...]
+     */
+    @SuppressWarnings("unchecked")
+    private static void readProfileData(Edge edge, Map<String, Object> e)
+    {
+        Object costs = e.containsKey("accessibilityCosts") ? e.get("accessibilityCosts") : e.get("accessibilityCostByProfile");
+        if (costs instanceof Map)
+        {
+            for (Map.Entry<String, Object> entry : ((Map<String, Object>) costs).entrySet())
+            {
+                if (entry.getValue() instanceof Number)
+                {
+                    edge.profileCosts.put(entry.getKey(), ((Number) entry.getValue()).doubleValue());
+                }
+            }
+        }
+        edge.steepRamp = bool(e, "steepRamp") || bool(e, "steep") || "steep".equals(e.get("rampGrade"));
+        for (Object profile : list(e.get("inaccessibleFor")))
+        {
+            if (profile instanceof String)
+            {
+                // Accept the website team's hyphenated ids too.
+                String id = ((String) profile).replace('-', '_');
+                edge.inaccessibleFor.add("no_preference".equals(id) ? RouteOptions.NONE : id);
+            }
+        }
     }
 
     // ---- helpers -----------------------------------------------------------

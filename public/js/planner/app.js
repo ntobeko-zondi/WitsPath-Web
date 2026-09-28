@@ -10,41 +10,25 @@ window.appState = {
 };
 
 window.appElements = {
-  languageSelect: document.getElementById('languageSelect'),
-  textSizeSelect: document.getElementById('textSizeSelect'),
-  stepFreeOnly: document.getElementById('stepFreeOnly'),
-  highContrastToggle: document.getElementById('highContrastToggle'),
   fromSelect: document.getElementById('fromSelect'),
   toSelect: document.getElementById('toSelect'),
-  routeButton: document.getElementById('routeButton'),
+  startNavigation: document.getElementById('startNavigation'),
   swapButton: document.getElementById('swapButton'),
+  useHomeBase: document.getElementById('useHomeBase'),
+  saveDestination: document.getElementById('saveDestination'),
   statusMessage: document.getElementById('statusMessage'),
   mapTitle: document.getElementById('mapTitle'),
   guidanceText: document.getElementById('guidanceText'),
   stepsList: document.getElementById('stepsList'),
+  estimatedTime: document.getElementById('estimatedTime'),
+  estimatedDistance: document.getElementById('estimatedDistance'),
   mapViewport: document.getElementById('mapViewport'),
   mapSurface: document.getElementById('mapSurface'),
   routeOverlay: document.getElementById('routeOverlay'),
   zoomIn: document.getElementById('zoomIn'),
   zoomOut: document.getElementById('zoomOut'),
-  resetView: document.getElementById('resetView'),
-  settingsDrawer: document.getElementById('settingsDrawer'),
-  drawerBackdrop: document.getElementById('drawerBackdrop'),
-  navToggle: document.getElementById('navToggle'),
-  closeDrawer: document.getElementById('closeDrawer'),
-  languageButton: document.getElementById('languageButton'),
-  contrastToggle: document.getElementById('contrastToggle')
+  resetView: document.getElementById('resetView')
 };
-
-function openDrawer() {
-  window.appElements.settingsDrawer.classList.add('open');
-  window.appElements.drawerBackdrop.hidden = false;
-}
-
-function closeDrawer() {
-  window.appElements.settingsDrawer.classList.remove('open');
-  window.appElements.drawerBackdrop.hidden = true;
-}
 
 function showStatus(message, type) {
   window.appElements.statusMessage.textContent = message;
@@ -103,19 +87,25 @@ function saveDestination() {
   showStatus(`Saved ${label} to your places.`, 'success');
 }
 
+// The Android app's "auto-detect" starts from the home base.
+function useHomeBase() {
+  const home = window.WitsPathSettings.get('homeNodeId');
+  if (!window.appState.graph.nodes.some((node) => node.nodeId === home)) {
+    showStatus('Set a home base in Saved places first.', 'error');
+    return;
+  }
+  window.appElements.fromSelect.value = home;
+  requestRoute();
+}
+
 function setDefaultSelection() {
   // Start from the home base when one is set (as the Android app does).
   const home = window.WitsPathSettings.get('homeNodeId');
-  const defaultFrom = window.appState.graph.nodes.some((node) => node.nodeId === home) ? home : 'nd_mu84hhsut';
+  const nodes = window.appState.graph.nodes;
+  const defaultFrom = nodes.some((node) => node.nodeId === home) ? home : 'nd_mu84hhsut';
   const defaultTo = 'nd_mu842rrrm';
-  const fromValue = window.appState.graph.nodes.some((node) => node.nodeId === defaultFrom)
-    ? defaultFrom
-    : window.appState.graph.nodes[0]?.nodeId || '';
-  const toValue = window.appState.graph.nodes.some((node) => node.nodeId === defaultTo)
-    ? defaultTo
-    : window.appState.graph.nodes[1]?.nodeId || '';
-  window.appElements.fromSelect.value = fromValue;
-  window.appElements.toSelect.value = toValue;
+  window.appElements.fromSelect.value = nodes.some((node) => node.nodeId === defaultFrom) ? defaultFrom : nodes[0]?.nodeId || '';
+  window.appElements.toSelect.value = nodes.some((node) => node.nodeId === defaultTo) ? defaultTo : nodes[1]?.nodeId || '';
   window.appElements.mapTitle.textContent = 'Select a route';
 }
 
@@ -124,6 +114,35 @@ function swapLocations() {
   window.appElements.fromSelect.value = window.appElements.toSelect.value;
   window.appElements.toSelect.value = currentFromValue;
   requestRoute();
+}
+
+// ---- mobility modes (the website team's travel-mode buttons) ----------------
+
+// Wheelchair and visual assistance never use stairs.
+const STEP_FREE_PROFILES = new Set(['wheelchair', 'low_vision']);
+
+function renderModes() {
+  const profile = window.WitsPathSettings.get('mobilityProfile');
+  document.querySelectorAll('.mode-button').forEach((button) => {
+    const selected = button.dataset.profile === profile;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
+
+function setMode(profile) {
+  const settings = window.WitsPathSettings;
+  settings.set('mobilityProfile', profile);
+  settings.set('stepFreeOnly', STEP_FREE_PROFILES.has(profile));
+  renderModes();
+  requestRoute();
+}
+
+// ---- routes ------------------------------------------------------------------------
+
+function clearSummary() {
+  window.appElements.estimatedTime.textContent = '—';
+  window.appElements.estimatedDistance.textContent = '';
 }
 
 // Routes come from the shared WitsPath routing engine (the same A* as the
@@ -137,17 +156,18 @@ async function requestRoute() {
 
   const fromNodeId = window.appElements.fromSelect.value;
   const toNodeId = window.appElements.toSelect.value;
-
   if (!fromNodeId || !toNodeId) {
     showStatus('Choose both a start and a destination.', 'error');
     return;
   }
   if (fromNodeId === toNodeId) {
     showStatus('Start and destination are the same place.', 'error');
+    clearSummary();
     renderRoute(null);
     return;
   }
 
+  const settings = window.WitsPathSettings;
   const requestId = ++routeRequestId;
   showStatus('Finding a route…', '');
   let response;
@@ -159,17 +179,21 @@ async function requestRoute() {
       body: JSON.stringify({
         fromNodeId,
         toNodeId,
-        accessible: window.appElements.stepFreeOnly.checked,
-        // Directions language follows the interface language; the server
-        // uses verified phrases only and falls back to English otherwise.
-        lang: window.WitsPathSettings?.uiLanguage() || 'en',
-        speedMultiplier: window.WitsPathSettings?.get('walkingSpeed')
+        accessible: settings.get('stepFreeOnly'),
+        mobilityProfile: settings.get('mobilityProfile'),
+        preferLifts: settings.get('preferLifts'),
+        avoidSteepRamps: settings.get('avoidSteepRamps'),
+        speedMultiplier: settings.get('walkingSpeed'),
+        // Directions follow the interface language; the server uses verified
+        // phrases only and falls back to English otherwise.
+        lang: settings.uiLanguage()
       })
     });
     body = await response.json();
   } catch {
     if (requestId !== routeRequestId) return;
     showStatus("Can't reach the WitsPath server right now.", 'error');
+    clearSummary();
     renderRoute(null);
     return;
   }
@@ -177,7 +201,7 @@ async function requestRoute() {
   if (requestId !== routeRequestId) return;
 
   if (!response.ok) {
-    const stepFree = window.appElements.stepFreeOnly.checked;
+    const stepFree = settings.get('stepFreeOnly');
     const message =
       body.error === 'no_route'
         ? stepFree
@@ -189,13 +213,17 @@ async function requestRoute() {
             ? 'Route planning is unavailable right now.'
             : "Couldn't confirm a route right now.";
     showStatus(message, 'error');
+    clearSummary();
     renderRoute(null);
     return;
   }
 
   window.appState.route = body;
   window.appElements.mapTitle.textContent = `${body.from} to ${body.to}`;
-  showStatus(`Route ready • ${Math.round(body.distanceM)} metres`, 'success');
+  const minutes = body.travelTime?.minutes;
+  window.appElements.estimatedTime.textContent = minutes ? `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}` : '—';
+  window.appElements.estimatedDistance.textContent = `(${Math.round(body.distanceM)} metres, estimate)`;
+  showStatus('', '');
   renderRoute(body);
 }
 
@@ -226,58 +254,27 @@ function loadGraph() {
     });
 }
 
-// Reflect the shared settings (settings.js) in the drawer's quick controls.
-function syncControls() {
-  const settings = window.WitsPathSettings;
-  window.appElements.languageSelect.value = settings.get('language');
-  window.appElements.textSizeSelect.value = settings.get('textSize');
-  window.appElements.stepFreeOnly.checked = settings.get('stepFreeOnly');
-  window.appElements.highContrastToggle.checked = settings.get('highContrast');
-  const language = settings.LANGUAGES.find((lang) => lang.tag === settings.get('language'));
-  window.appElements.languageButton.textContent = language && language.tag ? language.name : 'Language';
-}
-
 function wireControls() {
-  const settings = window.WitsPathSettings;
-  settings.LANGUAGES.forEach(({ tag, name }) => {
-    const option = document.createElement('option');
-    option.value = tag;
-    option.textContent = name;
-    if (tag) option.lang = tag;
-    window.appElements.languageSelect.appendChild(option);
+  document.querySelectorAll('.mode-button').forEach((button) => {
+    button.addEventListener('click', () => setMode(button.dataset.profile));
   });
+  renderModes();
 
-  window.appElements.languageSelect.addEventListener('change', (event) => settings.set('language', event.target.value));
-  window.appElements.textSizeSelect.addEventListener('change', (event) => settings.set('textSize', event.target.value));
-  window.appElements.highContrastToggle.addEventListener('change', (event) => settings.set('highContrast', event.target.checked));
-  window.appElements.stepFreeOnly.addEventListener('change', (event) => {
-    settings.set('stepFreeOnly', event.target.checked);
-    if (window.appState.route) {
-      requestRoute();
-    }
-  });
-  settings.onChange(syncControls);
+  window.appElements.fromSelect.addEventListener('change', requestRoute);
+  window.appElements.toSelect.addEventListener('change', requestRoute);
+  window.appElements.swapButton.addEventListener('click', swapLocations);
+  window.appElements.useHomeBase.addEventListener('click', useHomeBase);
+  window.appElements.saveDestination.addEventListener('click', saveDestination);
+  window.appElements.zoomIn.addEventListener('click', () => zoomMap(1.2));
+  window.appElements.zoomOut.addEventListener('click', () => zoomMap(1 / 1.2));
+  window.appElements.resetView.addEventListener('click', resetMapView);
 
-  window.appElements.navToggle.addEventListener('click', () => openDrawer());
-  window.appElements.closeDrawer.addEventListener('click', () => closeDrawer());
-  window.appElements.drawerBackdrop.addEventListener('click', () => closeDrawer());
-  window.appElements.languageButton.addEventListener('click', () => openDrawer());
-  window.appElements.contrastToggle.addEventListener('click', () => {
-    settings.set('highContrast', !settings.get('highContrast'));
-  });
-
-  window.appElements.routeButton.addEventListener('click', requestRoute);
-  document.getElementById('saveDestination').addEventListener('click', saveDestination);
   const nextClass = window.WitsPathReminders?.describe();
   const note = document.getElementById('nextClassNote');
   if (nextClass && note) {
     note.textContent = nextClass;
     note.hidden = false;
   }
-  window.appElements.swapButton.addEventListener('click', swapLocations);
-  window.appElements.zoomIn.addEventListener('click', () => zoomMap(1.2));
-  window.appElements.zoomOut.addEventListener('click', () => zoomMap(1 / 1.2));
-  window.appElements.resetView.addEventListener('click', resetMapView);
 
   window.appElements.mapViewport.addEventListener('wheel', handleMapWheel, { passive: false });
   window.appElements.mapViewport.addEventListener('pointerdown', startMapDrag);
@@ -307,7 +304,10 @@ function wireControls() {
     applyMapTransform();
   });
 
-  syncControls();
+  // Settings changed in another tab (or pulled from the account).
+  window.WitsPathSettings.onChange((name) => {
+    if (name === 'mobilityProfile' || name === '*') renderModes();
+  });
 }
 
 wireControls();

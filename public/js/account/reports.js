@@ -47,12 +47,46 @@
     );
   }
 
+  // "Report a problem at a place" (from the website team's reports page),
+  // saved to Firestore like every other report.
+  const form = document.getElementById('newReportForm');
+  const formStatus = document.getElementById('newReportStatus');
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = document.getElementById('newReportSubmit');
+    submit.disabled = true;
+    formStatus.textContent = 'Sending report…';
+    try {
+      const response = await auth.authorizedFetch('/api/reports', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          target: document.getElementById('newReportPlace').value,
+          issueType: form.querySelector('input[name="newReportType"]:checked').value,
+          description: document.getElementById('newReportDescription').value
+        })
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      formStatus.textContent = 'Obstacle reported. Thank you!';
+      document.getElementById('newReportDescription').value = '';
+      load(auth.user);
+    } catch {
+      formStatus.textContent = 'Failed to report obstacle. Please try again.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
   async function load(user) {
+    form.hidden = !user;
     if (!user) {
       status.textContent = '';
       list.replaceChildren();
       signIn.hidden = false;
       return;
+    }
+    if (!document.getElementById('newReportPlace').options.length) {
+      await window.WitsPathPlaces.fillSelect(document.getElementById('newReportPlace'));
     }
     signIn.hidden = true;
     status.textContent = 'Loading…';

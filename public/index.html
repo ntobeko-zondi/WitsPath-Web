@@ -3,11 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="WitsPath route planner for Wits West Campus accessibility navigation."
-    />
-    <title>WitsPath</title>
+    <meta name="description" content="Accessible route planning for Wits University West Campus." />
+    <meta name="theme-color" content="#002c5f" />
+    <title>Accessible Navigation | WitsPath</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/themes.css" />
     <link rel="stylesheet" href="/css/responsive.css" />
@@ -16,164 +14,133 @@
   <body>
     <div class="app-shell">
       <header class="topbar" aria-label="Main application header">
-        <button
-          id="navToggle"
-          class="icon-button"
-          type="button"
-          aria-label="Open preferences"
-        >
-          ☰
-        </button>
-
-        <div class="brand" aria-label="WitsPath logo and title">
-          <div class="brand-mark" aria-hidden="true">W</div>
-          <div class="brand-copy">
-            <span class="brand-name">WitsPath</span>
-            <span class="brand-sub">West Campus Access</span>
-          </div>
+        <div class="product-title">
+          <h1>Accessible Navigation</h1>
+          <p>A more inclusive campus for everyone</p>
         </div>
-
-        <div class="header-actions">
-          <button id="contrastToggle" class="pill-button" type="button">
-            High contrast
-          </button>
-          <button id="languageButton" class="pill-button" type="button">
-            Language
-          </button>
-        </div>
+        <span class="header-divider" aria-hidden="true"></span>
+        <a class="university-brand" href="/" aria-label="WitsPath home, Wits University">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 40 48">
+              <path d="M20 2 35 8v14c0 10-6 17-15 23C11 39 5 32 5 22V8L20 2Z" />
+              <path d="M9 12h22v12H9zM9 27c5 0 7 5 11 5s6-5 11-5" />
+              <path d="M15 12v12m10-12v12M4 19H1m38 0h-3" />
+              <circle cx="20" cy="7" r="2" />
+            </svg>
+          </span>
+          <span class="university-wordmark">
+            <span class="wits-word">WITS</span>
+            <span class="university-word">UNIVERSITY</span>
+          </span>
+        </a>
       </header>
 
-      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
-
-      <aside id="settingsDrawer" class="drawer" aria-label="Preferences panel">
-        <div class="drawer-header">
-          <h2 data-i18n="nav_preferences">Preferences</h2>
-          <button id="closeDrawer" class="icon-button" type="button" aria-label="Close preferences">
-            ✕
-          </button>
-        </div>
-
-        <section class="drawer-account" aria-labelledby="accountHeading">
-          <h3 id="accountHeading" class="eyebrow" data-i18n="nav_section_account">Account</h3>
-          <p id="accountName" class="drawer-account-name">Guest</p>
-          <p id="accountDetail" class="companion-small">Sign in or create an account</p>
-          <div id="accountSignedOut" class="drawer-links">
-            <a class="secondary-button" href="/login.html" data-i18n="nav_log_in">Log in</a>
-            <a class="secondary-button" href="/signup.html" data-i18n="nav_sign_up">Sign up</a>
-          </div>
-          <div id="accountSignedIn" class="drawer-links" hidden>
-            <a class="secondary-button" href="/reports.html" data-i18n="nav_my_reports">My reports</a>
-            <button id="logOutButton" class="secondary-button" type="button" data-i18n="dialog_log_out_confirm">Log out</button>
-          </div>
-        </section>
-
-        <nav class="drawer-nav" aria-labelledby="navHeading">
-          <h3 id="navHeading" class="eyebrow" data-i18n="nav_section_navigate">Navigate</h3>
+      <nav class="account-nav home-nav" aria-label="Page navigation">
+        <span class="account-nav-current" aria-current="page" data-i18n="nav_home">Home</span>
+        <div class="account-nav-links">
           <a href="/saved.html" data-i18n="nav_saved_places">Saved places</a>
-          <a href="/trip.html">Share my live trip</a>
+          <a href="/trip.html">Live trip</a>
+          <a href="/reports.html" data-i18n="nav_my_reports">My reports</a>
           <a href="/settings.html" data-i18n="nav_settings">Settings</a>
-        </nav>
-
-        <div class="drawer-section">
-          <label class="field" for="languageSelect">
-            <span data-i18n="nav_language">Language</span>
-            <select id="languageSelect" aria-label="Select language"></select>
-          </label>
-
-          <label class="checkbox-row" for="stepFreeOnly">
-            <input id="stepFreeOnly" type="checkbox" />
-            <span data-i18n="settings_step_free_title">Step-free route only</span>
-          </label>
-
-          <label class="checkbox-row" for="highContrastToggle">
-            <input id="highContrastToggle" type="checkbox" />
-            <span data-i18n="settings_high_contrast_title">High contrast</span>
-          </label>
-
-          <label class="field" for="textSizeSelect">
-            <span data-i18n="settings_text_size_title">Text size</span>
-            <select id="textSizeSelect" aria-label="Select text size">
-              <option value="small" data-i18n="text_size_small">Small</option>
-              <option value="default" selected data-i18n="text_size_default">Default</option>
-              <option value="large" data-i18n="text_size_large">Large</option>
-              <option value="huge" data-i18n="text_size_huge">Huge</option>
-            </select>
-          </label>
+          <span id="accountSignedOut" class="account-nav-account">
+            <a href="/login.html" data-i18n="nav_log_in">Log in</a>
+          </span>
+          <span id="accountSignedIn" class="account-nav-account" hidden>
+            <span id="accountName" class="account-nav-name"></span>
+            <button id="logOutButton" class="account-nav-button" type="button" data-i18n="dialog_log_out_confirm">Log out</button>
+          </span>
         </div>
-      </aside>
+      </nav>
 
       <main class="layout">
-        <section class="panel route-panel" aria-labelledby="routeTitle">
-          <h2 id="routeTitle">Plan a route</h2>
+        <aside class="route-panel" aria-label="Route details">
           <p id="nextClassNote" class="next-class-note" hidden></p>
           <p id="reminderBanner" class="companion-badge companion-badge-limited" role="alert" hidden></p>
 
-          <div class="route-fields">
-            <label class="field" for="fromSelect">
-              <span>From</span>
-              <select id="fromSelect" aria-label="Select starting location"></select>
+          <div class="destination-card">
+            <span class="location-pin destination-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-8.2 8-13A8 8 0 1 0 4 9c0 4.8 8 13 8 13Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            </span>
+            <label class="location-field" for="toSelect">
+              <span class="field-caption">Destination</span>
+              <select id="toSelect"></select>
+              <span class="campus-name">Wits West Campus</span>
             </label>
-
-            <label class="field" for="toSelect">
-              <span data-i18n="home_label_to">To</span>
-              <select id="toSelect" aria-label="Select destination"></select>
-            </label>
+            <button id="saveDestination" class="location-refresh" type="button" aria-label="Save destination to your places" title="Save destination to your places">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+            </button>
           </div>
 
-          <div class="route-actions">
-            <button id="routeButton" class="primary-button" type="button">Find route</button>
-            <button id="swapButton" class="secondary-button" type="button">Swap</button>
+          <p id="modeAccessibilityDescription" class="visually-hidden">
+            Wheelchair Accessible never uses stairs. Walking Aid can use stairs but prefers to avoid them. Visual
+            Assistance avoids stairs. General Route uses the standard route.
+          </p>
+          <div class="travel-modes" role="group" aria-label="Route accessibility" aria-describedby="modeAccessibilityDescription">
+            <button class="mode-button" type="button" data-profile="wheelchair" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="4" r="2" /><path d="M10 7h4l2 5h4m-10-5-2 6h6l2 5m-7-5a5 5 0 1 0 7 5" /></svg>
+              <span>Wheelchair<br />Accessible</span>
+            </button>
+            <button class="mode-button" type="button" data-profile="walking_aid" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="4" r="2" /><path d="m9 7 3 2 2 4m-5-6-2 5 4 2m1-5-3 5-1 7m3-7 5 7m2-16v16m-2 0h4" /></svg>
+              <span>Walking<br />Aid</span>
+            </button>
+            <button class="mode-button" type="button" data-profile="low_vision" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
+              <span>Visual<br />Assistance</span>
+            </button>
+            <button class="mode-button" type="button" data-profile="none" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2" /><path d="M12 7v6m-6-4 6 2 6-2M8 22l4-9 4 9" /></svg>
+              <span>General<br />Route</span>
+            </button>
           </div>
-          <button id="saveDestination" class="secondary-button save-destination" type="button">Save destination</button>
 
-          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="panel map-panel" aria-labelledby="mapTitle">
-          <div class="map-header">
+          <div class="route-summary">
+            <div class="summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            </div>
             <div>
-              <p class="eyebrow">Current route</p>
-              <h2 id="mapTitle">Select a route</h2>
-            </div>
-
-            <div class="map-controls" aria-label="Map controls">
-              <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
-              <button id="resetView" type="button" aria-label="Reset map view">Reset</button>
-              <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+              <span class="field-caption">Estimated time</span>
+              <p><strong id="estimatedTime">—</strong> <span id="estimatedDistance"></span></p>
             </div>
           </div>
 
-          <div id="mapViewport" class="map-viewport" tabindex="0" aria-label="Wits West Campus map">
-            <div id="mapSurface" class="map-surface">
-              <img
-                id="campusMap"
-                src="/assets/images/campus-map.jpeg"
-                alt="Wits West Campus map"
-              />
-              <svg id="routeOverlay" viewBox="0 0 647 717" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+          <div class="journey-start">
+            <span class="location-pin start-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-8.2 8-13A8 8 0 1 0 4 9c0 4.8 8 13 8 13Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            </span>
+            <div class="location-field">
+              <label class="field-caption" for="fromSelect">Start</label>
+              <div class="start-location-controls">
+                <select id="fromSelect"></select>
+                <!-- Like the Android app's "auto-detect": start from your home base. -->
+                <button id="useHomeBase" class="location-refresh" type="button" aria-label="Start from my home base" title="Start from my home base">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3V11Z" /></svg>
+                </button>
+              </div>
             </div>
           </div>
-        </section>
 
-        <section class="panel guidance-panel" aria-labelledby="guidanceTitle">
-          <div class="guidance-header">
-            <h2 id="guidanceTitle">Navigation</h2>
-            <button id="startNavigation" class="primary-button" type="button" hidden>Start step-by-step</button>
-          </div>
-          <p id="guidanceText" class="guidance-text">Choose your start and destination to begin.</p>
+          <p id="guidanceText" class="guidance-text" aria-live="polite">Choose a destination to see your route.</p>
+          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
 
           <div id="navigationMode" class="navigation-mode" hidden>
             <p class="eyebrow">Step <span id="navStepNumber">1</span> of <span id="navStepCount">1</span></p>
             <p id="navInstruction" class="nav-instruction" aria-live="polite"></p>
             <progress id="navProgress" max="100" value="0" aria-label="Route progress"></progress>
-            <div class="route-actions">
+            <div class="nav-actions">
               <button id="navPrev" class="secondary-button" type="button">Previous step</button>
               <button id="navNext" class="primary-button" type="button">Next step</button>
             </div>
             <button id="navExit" class="secondary-button nav-exit" type="button">Exit step-by-step</button>
           </div>
 
-          <ol id="stepsList" class="steps-list"></ol>
+          <ol id="stepsList" class="steps-list" hidden></ol>
+
+          <button id="startNavigation" class="start-navigation" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 18-9-4-9 4 9-18Z" /></svg>
+            <span>Start Navigation</span>
+          </button>
+          <button id="swapButton" class="visually-hidden" type="button">Swap start and destination</button>
 
           <details id="reportPanel" class="report-panel" hidden>
             <summary data-i18n="report_a_blocked_path">Report a blocked path</summary>
@@ -204,6 +171,30 @@
               <p id="reportStatus" class="status-message" role="status" aria-live="polite"></p>
             </form>
           </details>
+        </aside>
+
+        <section class="map-panel" aria-labelledby="mapTitle">
+          <h2 id="mapTitle" class="visually-hidden">Select a route</h2>
+          <div id="mapViewport" class="map-viewport" tabindex="0" aria-label="Wits West Campus map. Use arrow keys to move and plus or minus to zoom.">
+            <div id="mapSurface" class="map-surface">
+              <!-- The real campus map from the Android app: route coordinates line up with it. -->
+              <img id="campusMap" class="campus-map-art" src="/assets/images/campus-map.jpeg" alt="Map of Wits West Campus" />
+              <svg id="routeOverlay" viewBox="0 0 647 717" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+            <div class="map-tools" aria-label="Map controls">
+              <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+              <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+              <button id="resetView" type="button" aria-label="Reset map view" title="Reset map view">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 1v3m0 16v3M1 12h3m16 0h3" /></svg>
+              </button>
+            </div>
+            <div class="map-legend" aria-label="Map legend">
+              <div><span class="legend-line"></span><span>Suggested route</span></div>
+              <div><span class="legend-marker start-marker"></span><span>Start</span></div>
+              <div><span class="legend-marker destination-marker"></span><span>Destination</span></div>
+              <div><span class="legend-current"></span><span>You are here (step-by-step)</span></div>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -290,46 +281,46 @@
 
     <dialog id="shareDialog" class="share-dialog" aria-labelledby="shareDialogTitle" aria-describedby="shareDialogPrivacy">
       <div class="share-dialog-body">
-      <div class="share-dialog-header">
-        <h2 id="shareDialogTitle">Share route</h2>
-        <button id="shareDialogClose" class="companion-close" type="button" aria-label="Close share dialog">✕</button>
-      </div>
-      <p id="shareDialogRoute" class="share-dialog-route"></p>
-      <p id="shareDialogPrivacy" class="companion-small">
-        Anyone with the link can see this route card: start, destination, distance and steps. Your conversation is not
-        shared. The link expires after 30 days, and you can delete it at any time.
-      </p>
-
-      <div id="shareCreateStep">
-        <button id="shareCreate" class="companion-primary" type="button">Create link</button>
-      </div>
-
-      <div id="shareLinkStep" class="share-link-step" hidden>
-        <label for="shareLinkInput" class="companion-field"><span>Link</span></label>
-        <div class="share-link-row">
-          <input id="shareLinkInput" type="text" readonly />
-          <button id="shareCopy" class="companion-primary" type="button">Copy link</button>
+        <div class="share-dialog-header">
+          <h2 id="shareDialogTitle">Share route</h2>
+          <button id="shareDialogClose" class="companion-close" type="button" aria-label="Close share dialog">✕</button>
         </div>
-        <div class="share-targets" role="group" aria-label="Send the link with">
-          <button id="shareNative" class="companion-secondary" type="button" hidden>Share via…</button>
-          <a id="shareWhatsApp" class="companion-secondary" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-          <a id="shareEmail" class="companion-secondary">Email</a>
-          <a id="shareSms" class="companion-secondary">Text message</a>
-        </div>
-        <p id="shareExpiryNote" class="companion-small"></p>
-        <button id="shareDelete" class="companion-secondary share-delete" type="button">Delete link</button>
-      </div>
+        <p id="shareDialogRoute" class="share-dialog-route"></p>
+        <p id="shareDialogPrivacy" class="companion-small">
+          Anyone with the link can see this route card: start, destination, distance and steps. Your conversation is not
+          shared. The link expires after 30 days, and you can delete it at any time.
+        </p>
 
-      <p id="shareDialogStatus" class="companion-small" role="status" aria-live="polite"></p>
+        <div id="shareCreateStep">
+          <button id="shareCreate" class="companion-primary" type="button">Create link</button>
+        </div>
+
+        <div id="shareLinkStep" class="share-link-step" hidden>
+          <label for="shareLinkInput" class="companion-field"><span>Link</span></label>
+          <div class="share-link-row">
+            <input id="shareLinkInput" type="text" readonly />
+            <button id="shareCopy" class="companion-primary" type="button">Copy link</button>
+          </div>
+          <div class="share-targets" role="group" aria-label="Send the link with">
+            <button id="shareNative" class="companion-secondary" type="button" hidden>Share via…</button>
+            <a id="shareWhatsApp" class="companion-secondary" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <a id="shareEmail" class="companion-secondary">Email</a>
+            <a id="shareSms" class="companion-secondary">Text message</a>
+          </div>
+          <p id="shareExpiryNote" class="companion-small"></p>
+          <button id="shareDelete" class="companion-secondary share-delete" type="button">Delete link</button>
+        </div>
+
+        <p id="shareDialogStatus" class="companion-small" role="status" aria-live="polite"></p>
       </div>
     </dialog>
 
-    <script src="/js/firebase-config.js"></script>
-    <script src="/js/account/auth.js"></script>
-    <script src="/js/account/drawer-account.js"></script>
     <script src="/js/settings.js"></script>
     <script src="/js/i18n.js"></script>
     <script src="/js/places/reminders.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/account-nav.js"></script>
     <script src="/js/planner/map.js"></script>
     <script src="/js/planner/navigation.js"></script>
     <script src="/js/planner/report.js"></script>

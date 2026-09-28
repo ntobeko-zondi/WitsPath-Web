@@ -3,6 +3,7 @@ package com.example.witspath.routing.service;
 import com.example.witspath.routing.CampusGraph;
 import com.example.witspath.routing.Node;
 import com.example.witspath.routing.PathFinder;
+import com.example.witspath.routing.RouteOptions;
 import com.example.witspath.routing.TravelTimeConfig;
 import com.example.witspath.routing.TravelTimeEstimator;
 
@@ -44,6 +45,13 @@ public final class RoutingTests
         test("A*: flagged and blocked edges are skipped", RoutingTests::flaggedSkipped);
         test("A*: no route gives the Android error message", RoutingTests::noRoute);
         test("A*: same start and destination", RoutingTests::samePlace);
+
+        test("profiles: wheelchair is always step-free", RoutingTests::wheelchairStepFree);
+        test("profiles: per-profile costs and inaccessible edges", RoutingTests::profileCostsAndAccess);
+        test("profiles: walking aid dislikes stairs-only edges", RoutingTests::walkingAidStairs);
+        test("options: avoid steep ramps and prefer lifts", RoutingTests::steepRampsAndLifts);
+        test("travel time: profile speeds", RoutingTests::profileSpeeds);
+        test("service: options are passed and validated", RoutingTests::serviceOptions);
 
         test("service: route response shape", RoutingTests::serviceResponse);
         test("service: rejects unknown nodes and bad graphs", RoutingTests::serviceRejects);
@@ -231,6 +239,82 @@ public final class RoutingTests
     {
         CampusGraph g = campus();
         check(new PathFinder().aStarSearch(g.node("nd_mu842mili"), g.node("nd_mu842mili"), true) == null, "same place");
+    }
+
+    // ---- mobility profiles and options ---------------------------------------------------------
+
+    private static List<String> route(CampusGraph g, String from, String to, RouteOptions options)
+    {
+        List<Node> path = new PathFinder().aStarSearch(g.node(from), g.node(to), options);
+        return path == null ? null : ids(path);
+    }
+
+    private static void wheelchairStepFree()
+    {
+        // A-D stairs (200) vs A-B-D (300): the wheelchair profile never takes stairs,
+        // even when the caller didn't ask for step-free.
+        CampusGraph g = line(
+                "{\"edgeId\":\"ad\",\"fromNodeId\":\"A\",\"toNodeId\":\"D\",\"distance\":200,\"stairs\":true},"
+                + "{\"edgeId\":\"ab\",\"fromNodeId\":\"A\",\"toNodeId\":\"B\",\"distance\":150},"
+                + "{\"edgeId\":\"bd\",\"fromNodeId\":\"B\",\"toNodeId\":\"D\",\"distance\":150}");
+        check(Arrays.asList("A", "D").equals(route(g, "A", "D", new RouteOptions("none", false, false, false))), "none");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("wheelchair", false, false, false))), "wheelchair");
+    }
+
+    private static void profileCostsAndAccess()
+    {
+        // Direct A-D is cheap for everyone except low vision (cost 3) and closed to walking aids.
+        CampusGraph g = line(
+                "{\"edgeId\":\"ad\",\"fromNodeId\":\"A\",\"toNodeId\":\"D\",\"distance\":200,"
+                + "\"accessibilityCosts\":{\"lowVision\":3},\"inaccessibleFor\":[\"walking-aid\"]},"
+                + "{\"edgeId\":\"ab\",\"fromNodeId\":\"A\",\"toNodeId\":\"B\",\"distance\":150},"
+                + "{\"edgeId\":\"bd\",\"fromNodeId\":\"B\",\"toNodeId\":\"D\",\"distance\":150}");
+        check(Arrays.asList("A", "D").equals(route(g, "A", "D", new RouteOptions("none", false, false, false))), "none");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("low_vision", false, false, false))), "low vision");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("walking_aid", false, false, false))), "walking aid");
+    }
+
+    private static void walkingAidStairs()
+    {
+        // Stairs 200 vs flat 250: others take the stairs, walking aid (x1.5 = 300) goes round.
+        CampusGraph g = line(
+                "{\"edgeId\":\"ad\",\"fromNodeId\":\"A\",\"toNodeId\":\"D\",\"distance\":200,\"stairs\":true},"
+                + "{\"edgeId\":\"ab\",\"fromNodeId\":\"A\",\"toNodeId\":\"B\",\"distance\":125},"
+                + "{\"edgeId\":\"bd\",\"fromNodeId\":\"B\",\"toNodeId\":\"D\",\"distance\":125}");
+        check(Arrays.asList("A", "D").equals(route(g, "A", "D", new RouteOptions("low_vision", false, false, false))), "low vision");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("walking_aid", false, false, false))), "walking aid");
+    }
+
+    private static void steepRampsAndLifts()
+    {
+        // Steep ramp A-D (200) vs lift A-B-D (240).
+        CampusGraph g = line(
+                "{\"edgeId\":\"ad\",\"fromNodeId\":\"A\",\"toNodeId\":\"D\",\"distance\":200,\"ramp\":true,\"steepRamp\":true},"
+                + "{\"edgeId\":\"ab\",\"fromNodeId\":\"A\",\"toNodeId\":\"B\",\"distance\":120,\"elevator\":true},"
+                + "{\"edgeId\":\"bd\",\"fromNodeId\":\"B\",\"toNodeId\":\"D\",\"distance\":120,\"elevator\":true}");
+        check(Arrays.asList("A", "D").equals(route(g, "A", "D", new RouteOptions("wheelchair", true, false, false))), "default");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("wheelchair", true, false, true))), "avoid steep");
+        check(Arrays.asList("A", "B", "D").equals(route(g, "A", "D", new RouteOptions("wheelchair", true, true, false))), "prefer lifts");
+    }
+
+    private static void profileSpeeds()
+    {
+        CampusGraph g = line("{\"edgeId\":\"ab\",\"fromNodeId\":\"A\",\"toNodeId\":\"B\",\"distance\":100}");
+        List<Node> path = Arrays.asList(g.node("A"), g.node("B"));
+        close(TravelTimeConfig.OVERHEAD_SECONDS + 100.0 / 0.8, new TravelTimeEstimator(1.0, "wheelchair").estimateTime(path), "wheelchair");
+        close(TravelTimeConfig.OVERHEAD_SECONDS + 100.0 / 1.1, new TravelTimeEstimator(1.0, "walking_aid").estimateTime(path), "walking aid");
+        close(TravelTimeConfig.OVERHEAD_SECONDS + 100.0 / 1.4, new TravelTimeEstimator(1.0, "none").estimateTime(path), "none");
+    }
+
+    private static void serviceOptions()
+    {
+        Map<String, Object> request = request(Json.parse(campusJson), "nd_mu84hhsut", "nd_mu842rrrm", false);
+        request.put("mobility_profile", "wheelchair");
+        RoutingServer.Result result = RoutingServer.route(request);
+        // 30 s + 82.01 m / 0.8 m/s = 132.5 s
+        check(((Number) result.body.get("estimated_seconds")).longValue() == 133L, "seconds " + result.body.get("estimated_seconds"));
+        request.put("mobility_profile", "hovercraft");
+        check(RoutingServer.route(request).status == 400, "unknown profile rejected");
     }
 
     // ---- service -----------------------------------------------------------------------------

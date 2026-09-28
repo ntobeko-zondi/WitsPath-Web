@@ -18,8 +18,9 @@ function renderRoute(card) {
   svg.replaceChildren();
 
   if (!card || !card.points || card.points.length < 2) {
-    window.appElements.guidanceText.textContent = 'Choose your start and destination to begin.';
+    window.appElements.guidanceText.textContent = 'Choose a destination to see your route.';
     window.appElements.stepsList.replaceChildren();
+    window.appElements.stepsList.hidden = true;
     window.WitsPathNavigation?.setRoute(null);
     window.WitsPathReport?.setRoute(null);
     return;
@@ -29,12 +30,10 @@ function renderRoute(card) {
   polyline.setAttribute('points', card.points.map((point) => `${point.x},${point.y}`).join(' '));
   svg.append(polyline, svgCircle(card.points[0], 'route-start'), svgCircle(card.points[card.points.length - 1], 'route-end'));
 
-  const summary = [`${Math.round(card.distanceM)} metres`];
-  if (card.travelTime) {
-    summary.push(`about ${card.travelTime.minutes} ${card.travelTime.minutes === 1 ? 'minute' : 'minutes'} (estimate)`);
-  }
-  summary.push(card.accessible ? 'step-free' : 'not confirmed step-free');
-  window.appElements.guidanceText.textContent = summary.join(' • ');
+  // Time and distance are in the summary card; the steps appear with Start Navigation.
+  window.appElements.guidanceText.textContent =
+    `Route ready: ${card.accessible ? 'step-free' : 'not confirmed step-free'}. ` +
+    'Press Start Navigation for step-by-step directions.';
 
   window.appElements.stepsList.replaceChildren(
     ...card.steps.map((step, index) => {

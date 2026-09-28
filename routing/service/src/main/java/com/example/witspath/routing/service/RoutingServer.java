@@ -4,6 +4,7 @@ import com.example.witspath.routing.CampusGraph;
 import com.example.witspath.routing.Edge;
 import com.example.witspath.routing.Node;
 import com.example.witspath.routing.PathFinder;
+import com.example.witspath.routing.RouteOptions;
 import com.example.witspath.routing.TravelTimeEstimator;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -31,7 +32,8 @@ import java.util.concurrent.Executors;
  *
  *   GET  /health     -> {"status":"ok"}
  *   POST /v1/route   body: {graph:{floors,nodes,edges}, from_node_id, to_node_id,
- *                           accessible, speed_multiplier?}
+ *                           accessible, speed_multiplier?, mobility_profile?,
+ *                           prefer_lifts?, avoid_steep_ramps?}
  *     200 {path:[nodeId...], edge_ids:[...], distance_m, accessible, estimated_seconds,
  *          blocked_segments:[], engine}
  *     422 {error:"no_route", message}   400 {error:"bad_request", message}
@@ -128,16 +130,25 @@ public final class RoutingServer
         {
             return new Result(400, error("unknown_place", "from_node_id and to_node_id must be nodes in the graph."));
         }
-        boolean accessible = Boolean.TRUE.equals(request.get("accessible"));
         double multiplier = 1.0;
         Object m = request.get("speed_multiplier");
         if (m instanceof Number)
         {
             multiplier = Math.min(2.0, Math.max(0.3, ((Number) m).doubleValue()));
         }
+        Object profile = request.get("mobility_profile");
+        if (profile != null && !(profile instanceof String && RouteOptions.isKnown((String) profile)))
+        {
+            return new Result(400, error("bad_request", "mobility_profile must be none, wheelchair, walking_aid or low_vision."));
+        }
+        RouteOptions options = new RouteOptions(
+                profile == null ? RouteOptions.NONE : (String) profile,
+                Boolean.TRUE.equals(request.get("accessible")),
+                Boolean.TRUE.equals(request.get("prefer_lifts")),
+                Boolean.TRUE.equals(request.get("avoid_steep_ramps")));
 
         PathFinder finder = new PathFinder();
-        LinkedList<Node> path = finder.aStarSearch(from, to, accessible);
+        LinkedList<Node> path = finder.aStarSearch(from, to, options);
         if (path == null)
         {
             return new Result(422, error(from == to ? "same_place" : "no_route", finder.getErrorMessage()));
@@ -164,7 +175,7 @@ public final class RoutingServer
         body.put("edge_ids", edgeIds);
         body.put("distance_m", Math.round(distance * 10) / 10.0);
         body.put("accessible", stepFree);
-        body.put("estimated_seconds", Math.round(new TravelTimeEstimator(multiplier).estimateTime(path)));
+        body.put("estimated_seconds", Math.round(new TravelTimeEstimator(multiplier, options.mobilityProfile).estimateTime(path)));
         body.put("blocked_segments", new ArrayList<>());
         body.put("engine", ENGINE);
         return new Result(200, body);

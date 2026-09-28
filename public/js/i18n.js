@@ -41,7 +41,8 @@
     notice.lang = 'en';
     notice.textContent =
       'Interface text in this language comes from the WitsPath Android app and has not been reviewed for the website yet. Some text is still in English.';
-    main.prepend(notice);
+    // Before <main>, not inside it: main is a flex row on the home page.
+    main.before(notice);
   }
 
   async function load() {

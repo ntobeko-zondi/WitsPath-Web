@@ -66,7 +66,11 @@ test('get_route: unavailable routing mode fails closed', async () => {
 test('get_route: sends the live graph + walking speed to the engine and returns its route', async () => {
   const engine = fakeEngine();
   const store = makeStore();
-  const ctx = { ...ctxFor(store, 'http', engine), speedMultiplier: 0.7 };
+  const ctx = {
+    ...ctxFor(store, 'http', engine),
+    speedMultiplier: 0.7,
+    routeOptions: { mobilityProfile: 'walking_aid', preferLifts: true, avoidSteepRamps: false }
+  };
   const result = await runTool('get_route', { from_node_id: NODES.commerceLibrary, to_node_id: NODES.towerOfLight, accessible: true }, ctx);
   assert.equal(result.distance_m, 37.1);
   assert.equal(result.accessible, true);
@@ -78,6 +82,9 @@ test('get_route: sends the live graph + walking speed to the engine and returns 
   assert.equal(request.graph.nodes.length, (await store.getGraph()).nodes.length);
   assert.equal(request.speed_multiplier, 0.7);
   assert.equal(request.accessible, true);
+  assert.equal(request.mobility_profile, 'walking_aid');
+  assert.equal(request.prefer_lifts, true);
+  assert.equal(request.avoid_steep_ramps, false);
 });
 
 test('get_route: works in both directions', async () => {

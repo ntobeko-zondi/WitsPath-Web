@@ -27,6 +27,10 @@
     language: ['pref_ui_language', '', true],
     textSize: ['pref_text_size', 'default', true],
     highContrast: ['pref_high_contrast', false, true],
+    // Android WitsPathApplication: "pref_dark_theme". Defaults to the system setting.
+    darkMode: ['pref_dark_theme', null, true],
+    preferLifts: ['pref_prefer_lifts', false, true],
+    avoidSteepRamps: ['pref_avoid_steep_ramps', false, true],
     stepFreeOnly: ['pref_step_free_only', true, true],
     mobilityProfile: ['pref_mobility_profile', 'none', true],
     walkingSpeed: ['pref_walking_speed_multiplier', 1, true],
@@ -97,6 +101,9 @@
     if (!body) return;
     body.dataset.textScale = get('textSize');
     body.dataset.contrast = String(get('highContrast'));
+    const dark = get('darkMode');
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    body.dataset.theme = (dark === null ? prefersDark : dark) ? 'dark' : 'light';
     // The page itself stays lang="en": most text is English, and i18n.js marks
     // each translated element with its own lang so screen readers pronounce
     // every part correctly.
@@ -126,7 +133,9 @@
     if (!auth?.user || !get('syncEnabled')) return;
     const preferences = {};
     for (const [name, [key, , synced]] of Object.entries(SETTINGS)) {
-      if (synced) preferences[key] = androidValue(name);
+      const value = synced ? androidValue(name) : null;
+      // null = "not chosen" (e.g. dark mode following the system): don't sync.
+      if (value !== null) preferences[key] = value;
     }
     try {
       await auth.authorizedFetch('/api/me/preferences', {

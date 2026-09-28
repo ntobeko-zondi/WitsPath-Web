@@ -285,7 +285,10 @@
           inputMode: voice ? 'voice' : 'text',
           inputLang: voice?.lang || null,
           preferredLang: selectedLang(),
-          speedMultiplier: window.WitsPathSettings?.get('walkingSpeed')
+          speedMultiplier: window.WitsPathSettings?.get('walkingSpeed'),
+          mobilityProfile: window.WitsPathSettings?.get('mobilityProfile'),
+          preferLifts: window.WitsPathSettings?.get('preferLifts'),
+          avoidSteepRamps: window.WitsPathSettings?.get('avoidSteepRamps')
         })
       });
       result = await response.json();

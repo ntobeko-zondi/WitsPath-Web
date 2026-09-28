@@ -68,6 +68,7 @@ async function handleMessage(deps, request) {
     userId: request.userId || null,
     groundedRoutes: [...(session.groundedRoutes || [])],
     speedMultiplier: request.speedMultiplier || 1,
+    routeOptions: request.routeOptions,
     declaredLang: null,
     route: null,
     travelTime: null,

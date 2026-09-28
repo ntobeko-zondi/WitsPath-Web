@@ -22,19 +22,23 @@
 
   const state = { card: null, steps: [], index: 0 };
 
+  // A new route: steps stay hidden until "Start Navigation" (the website
+  // team's flow).
   function setRoute(card) {
     exit();
     state.card = card;
     state.steps = card
       ? card.steps.map((step, listIndex) => ({ ...step, listIndex })).filter((step) => Number.isInteger(step.pointIndex))
       : [];
-    el.start.hidden = state.steps.length < 2;
+    el.start.disabled = state.steps.length < 2;
+    el.stepsList.hidden = true;
   }
 
   function start() {
     if (state.steps.length < 2) return;
     state.index = 0;
     el.start.hidden = true;
+    el.stepsList.hidden = false;
     el.mode.hidden = false;
     render();
     el.next.focus();
@@ -77,7 +81,7 @@
 
   function exit() {
     el.mode.hidden = true;
-    el.start.hidden = state.steps.length < 2;
+    el.start.hidden = false;
     window.setCurrentMarker?.(null);
     el.stepsList.querySelectorAll('li').forEach((li) => {
       li.classList.remove('is-current', 'is-done');

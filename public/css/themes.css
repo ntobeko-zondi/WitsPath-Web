@@ -40,8 +40,9 @@ body[data-ui-lang="tn"] { --lang-accent: #a3ce4e; }
 body[data-ui-lang="xh"] { --lang-accent: #3eb8e0; }
 body[data-ui-lang="af"] { --lang-accent: #63c55f; }
 
-/* High contrast: the Android app's night palette. */
-body[data-contrast="true"] {
+/* Dark mode: the Android app's night palette (values-night/colors.xml) with
+   the website redesign's map and control tokens. */
+body[data-theme="dark"] {
   --body-bg: #121212;
   --panel: #1e1e1e;
   --panel-strong: #2c2c2c;
@@ -53,11 +54,72 @@ body[data-contrast="true"] {
   --route-soft: rgba(100, 181, 246, 0.28);
   --success: #4db6ac;
   --danger: #ef9a9a;
+  --wits-blue-800: #1a4f8f;
   --wits-blue-700: #1e5aa8;
+  --wits-blue-600: #3a78c6;
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --topbar-bg: linear-gradient(135deg, #0b1f3a, #12366b);
   --button-text: #ffffff;
+  --map-background: #18283c;
+  --map-controls: #1e1e1e;
+  --map-controls-hover: #2c2c2c;
+  --step-background: #2c2c2c;
+  --step-ink: #eaf2ff;
+  --mode-selected-background: #1a3a5c;
+  --mode-selected-ink: #c7e1ff;
   color-scheme: dark;
+}
+
+body[data-theme="dark"]:not([data-contrast="true"]) .account-nav a,
+body[data-theme="dark"]:not([data-contrast="true"]) .account-nav-button {
+  color: #a9d4ff;
+}
+
+body[data-theme="dark"] .map-surface > .campus-map-art {
+  filter: brightness(0.8) saturate(0.85);
+}
+
+/* High contrast: black and yellow (from the website redesign). */
+body[data-contrast="true"] {
+  --body-bg: #000;
+  --panel: #101010;
+  --panel-strong: #202020;
+  --white: #080808;
+  --ink: #fff;
+  --ink-muted: #f1f1f1;
+  --line: #d7d7d7;
+  --success: #5dff9e;
+  --danger: #ff8a80;
+  --route: #ffdc00;
+  --route-soft: rgba(255, 220, 0, 0.28);
+  --wits-blue-800: #ffdc00;
+  --wits-blue-700: #ffdc00;
+  --wits-blue-600: #ffdc00;
+  --focus-ring: 0 0 0 3px #ffdc00;
+  --topbar-bg: #000;
+  --button-text: #000;
+  --map-background: #000;
+  --map-controls: #111;
+  --map-controls-hover: #303030;
+  --step-background: #222;
+  --step-ink: #fff;
+  --mode-selected-background: #252525;
+  --mode-selected-ink: #ffdc00;
+  color-scheme: dark;
+}
+
+body[data-contrast="true"] .map-surface > .campus-map-art {
+  filter: grayscale(1) contrast(1.2);
+}
+
+body[data-theme="dark"] .location-field select,
+body[data-theme="dark"] .field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d2deed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+body[data-contrast="true"] .location-field select,
+body[data-contrast="true"] .field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffdc00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 body[data-text-scale="small"] {

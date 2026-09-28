@@ -15,10 +15,18 @@ import java.util.List;
 public class TravelTimeEstimator
 {
     private final double speedMultiplier;
+    private final double baseSpeedMps;
 
     public TravelTimeEstimator(double speedMultiplier)
     {
+        this(speedMultiplier, RouteOptions.NONE);
+    }
+
+    /** @param mobilityProfile sets the base speed (TravelTimeConfig.speedFor) */
+    public TravelTimeEstimator(double speedMultiplier, String mobilityProfile)
+    {
         this.speedMultiplier = speedMultiplier > 0 ? speedMultiplier : 1.0;
+        this.baseSpeedMps = TravelTimeConfig.speedFor(mobilityProfile);
     }
 
     /** Estimated travel time for a route, in seconds. */
@@ -30,7 +38,7 @@ public class TravelTimeEstimator
         }
 
         double totalSeconds = TravelTimeConfig.OVERHEAD_SECONDS;
-        double speedMps = TravelTimeConfig.DEFAULT_SPEED_MPS * speedMultiplier;
+        double speedMps = baseSpeedMps * speedMultiplier;
 
         for (int i = 0; i < path.size() - 1; i++)
         {
