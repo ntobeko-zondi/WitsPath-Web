@@ -11,13 +11,20 @@
     logOut: document.getElementById('logOutButton')
   };
   const auth = window.WitsPathAuth;
+  const t = (key, fallback) => (window.WitsPathI18n ? window.WitsPathI18n.t(key, fallback) : fallback);
+  let lastUser = null;
 
+  // Built in code (not data-i18n) because it shows the user's own name.
   function render(user) {
+    lastUser = user;
     el.signedOut.hidden = Boolean(user);
     el.signedIn.hidden = !user;
-    el.name.textContent = user ? user.displayName || 'Your account' : 'Guest';
+    el.name.textContent = user ? user.displayName || 'Your account' : t('nav_guest_title', 'Guest');
     el.detail.textContent = user ? user.email || '' : 'Sign in or create an account';
   }
+  document.addEventListener('witspath:i18n', () => {
+    if (auth.enabled) render(lastUser);
+  });
 
   el.logOut.addEventListener('click', async () => {
     const ok = window.confirm(

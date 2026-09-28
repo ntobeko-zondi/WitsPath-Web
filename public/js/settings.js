@@ -97,10 +97,16 @@
     if (!body) return;
     body.dataset.textScale = get('textSize');
     body.dataset.contrast = String(get('highContrast'));
+    // The page itself stays lang="en": most text is English, and i18n.js marks
+    // each translated element with its own lang so screen readers pronounce
+    // every part correctly.
+    body.dataset.uiLang = uiLanguage();
+  }
+
+  /** The interface language in use: the setting, else the browser's, else English. */
+  function uiLanguage() {
     const language = get('language') || (navigator.language || 'en').split('-')[0];
-    const known = LANGUAGES.some((lang) => lang.tag === language) ? language : 'en';
-    body.dataset.uiLang = known;
-    document.documentElement.lang = known;
+    return LANGUAGES.some((lang) => lang.tag === language) ? language : 'en';
   }
 
   // ---- account sync --------------------------------------------------------
@@ -169,6 +175,7 @@
     get,
     set,
     apply,
+    uiLanguage,
     onChange(fn) {
       listeners.add(fn);
       return () => listeners.delete(fn);

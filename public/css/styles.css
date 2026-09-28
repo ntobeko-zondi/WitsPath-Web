@@ -445,6 +445,18 @@ svg .route-current {
   border-bottom: 4px solid var(--lang-accent);
 }
 
+/* Shown when interface translations haven't been reviewed (i18n.js). */
+.i18n-notice {
+  max-width: 1280px;
+  margin: 0 auto 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.8rem;
+  background: var(--companion-warn-bg, #fff4dc);
+  color: var(--companion-warn-ink, #6b4700);
+  font-size: 0.95rem;
+  grid-column: 1 / -1;
+}
+
 /* ---- drawer account section ---- */
 
 .drawer-account {

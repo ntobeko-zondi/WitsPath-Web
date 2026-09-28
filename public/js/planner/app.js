@@ -160,7 +160,9 @@ async function requestRoute() {
         fromNodeId,
         toNodeId,
         accessible: window.appElements.stepFreeOnly.checked,
-        lang: window.WitsPathSettings?.get('language') || document.documentElement.lang,
+        // Directions language follows the interface language; the server
+        // uses verified phrases only and falls back to English otherwise.
+        lang: window.WitsPathSettings?.uiLanguage() || 'en',
         speedMultiplier: window.WitsPathSettings?.get('walkingSpeed')
       })
     });

@@ -1,34 +1,48 @@
 # WitsPath-Web
 
-Website for WitsPath, accessible indoor navigation for Wits University, with an embedded **AI Companion**. The companion finds places, gives accessible routes and travel-time estimates, takes reports of path issues, shares routes, and accepts voice input in South African languages.
+The website version of WitsPath, accessible indoor navigation for Wits University, built from the WitsPath Android app. It has the same routing engine, accounts, reports, settings and saved places as the app, and adds:
+- an **AI Companion**, which finds places, gives accessible routes and travel-time estimates, takes reports and accepts voice input in South African languages
+- step-by-step navigation
+- route sharing
+- live trips across all Wits campuses
 
 ## Layout
 
 ```
 public/                         everything the browser loads (Firebase Hosting root)
-  index.html                    route planner + AI companion
+  index.html                    route planner + step-by-step navigation + AI companion
+  login.html, signup.html       accounts (same Firebase accounts as the Android app)
+  reports.html                  my reports
+  settings.html, saved.html     settings (synced with the app), saved places + next-class reminder
   share.html                    /share/{id} route card
   trip.html, track.html         live trip: sender page, viewer page (/track/{id})
   admin/places.html             campus places admin (/admin)
-  css/                          all stylesheets
-  js/planner/                   route planner scripts
+  css/                          themes.css (colour tokens), styles.css, companion.css, pages.css
+  js/settings.js, js/i18n.js    settings + interface translations (every page)
+  js/firebase-config.js         Firebase web config (public values)
+  js/account/                   sign-in, sign-up, my reports, settings page, drawer account
+  js/planner/                   route planner, navigation, report a blocked path
+  js/places/                    campus place list, saved places, reminders
   js/companion/                 companion chat, voice layer, share page
   js/tracking/                  live trips + map adapter (OpenStreetMap now, Google later)
   js/admin/                     admin page script
-  assets/images/                campus map and other images
+  i18n/                         interface strings imported from the Android app
+  assets/images/                campus map (from the Android app)
   data/                         campus graph (same data as the Android app)
   vendor/leaflet-1.9.4/         map library (BSD-2 licence)
-functions/                      server: Cloud Function "companionMessage" (all /api/** routes)
+functions/                      server: Cloud Function "companionMessage" (all /api/**) + report trigger
   src/companion/                tool-use loop, system prompt, numeric grounding guard
   src/tools/                    tool contracts + handlers (find_place, get_route, ...)
-  src/routing/                  routing interface - NO pathfinding here (see below)
+  src/routing/                  client for the shared routing engine + route cards - NO pathfinding
   src/directions/               Tier 2 phrase templates + deterministic directions
   src/language/                 11 official languages and their honest capability tier
+  src/reports/, src/users/      reports + flagging, user profiles/preferences (Android schema)
+  src/places/, src/tracking/    campus places, live trips
   src/share/                    route-card sharing, transcript export
   src/speech/                   Vulavula speech-to-text proxy
   src/store/                    Firestore store + in-memory store (dev/tests)
   seed/                         place aliases, campus list
-  scripts/                      seed Firestore, client-bundle key scan, live eval
+  scripts/                      seed Firestore, import Android strings, bundle key scan, live eval
 routing/                        shared routing engine (Android A* + travel time, Java) + HTTP service
 firebase.json                   hosting (public/) + /api/**, /share/**, /track/** rewrites
 firestore.companion.rules       rules to MERGE into the Android app's rules
@@ -167,6 +181,18 @@ Setup:
 1. In the Firebase console, add a **Web app** to the project.
 2. Paste its config into `public/js/firebase-config.js`. These values are public by design. Leave it `null` and accounts show as "not set up yet".
 3. For local sign-in, set `FIREBASE_PROJECT_ID=wavelets-wits-nav` in `functions/.env`. The dev server can then verify real sign-ins. It needs no credentials, but keeps profiles in memory.
+
+## Settings, saved places and translations
+
+- **Settings** (`/settings.html`) use the Android `Prefs` keys. When signed in they sync to `users/{uid}.preferences`, so they follow you between the website and the app. Covered: text size, high contrast, step-free routes, walking/wheeling speed (the routing engine's speed multiplier), mobility profile, interface language and sync. Android's "prefer lifts" and "avoid steep ramps" aren't shown because the routing engine doesn't use them yet.
+- **Saved places, home base and the next-class reminder** (`/saved.html`) stay on the device, as on Android. The reminder uses the Android rule: leave time = class start − travel time − 5 minutes. Browsers can only remind you while a WitsPath tab is open.
+- **Interface translations** in `public/i18n/` are imported from the Android app's `strings.xml` with this command:
+
+  ```bash
+  node functions/scripts/import-android-strings.js <android>/app/src/main/res
+  ```
+
+  Nobody has confirmed who reviewed them, so non-English pages say they are unreviewed. They cover interface labels only. Directions and live-trip status lines always come from the verified phrase templates.
 
 ## Live trips (all Wits campuses)
 

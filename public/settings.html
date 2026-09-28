@@ -30,17 +30,17 @@
             <fieldset>
               <legend data-i18n="nav_accessibility">Accessibility</legend>
               <label class="companion-field" for="settingTextSize">
-                <span>Text size</span>
+                <span data-i18n="settings_text_size_title">Text size</span>
                 <select id="settingTextSize">
-                  <option value="small">Small</option>
-                  <option value="default">Default</option>
-                  <option value="large">Large</option>
-                  <option value="huge">Huge</option>
+                  <option value="small" data-i18n="text_size_small">Small</option>
+                  <option value="default" data-i18n="text_size_default">Default</option>
+                  <option value="large" data-i18n="text_size_large">Large</option>
+                  <option value="huge" data-i18n="text_size_huge">Huge</option>
                 </select>
               </label>
               <label class="companion-check" for="settingContrast">
                 <input id="settingContrast" type="checkbox" />
-                <span>High contrast</span>
+                <span data-i18n="settings_high_contrast_title">High contrast</span>
               </label>
             </fieldset>
 
@@ -48,7 +48,7 @@
               <legend>Routes</legend>
               <label class="companion-check" for="settingStepFree">
                 <input id="settingStepFree" type="checkbox" />
-                <span>Step-free routes only</span>
+                <span data-i18n="settings_step_free_title">Step-free routes only</span>
               </label>
               <label class="companion-field" for="settingSpeed">
                 <span>Walking or wheeling speed</span>
@@ -62,7 +62,7 @@
             </fieldset>
 
             <fieldset aria-describedby="profileHelp">
-              <legend>Mobility profile</legend>
+              <legend data-i18n="settings_mobility_profile_title">Mobility profile</legend>
               <label class="companion-check"><input type="radio" name="settingProfile" value="none" /> <span data-i18n="mobility_none">No preference</span></label>
               <label class="companion-check"><input type="radio" name="settingProfile" value="wheelchair" /> <span data-i18n="mobility_wheelchair">Wheelchair</span></label>
               <label class="companion-check"><input type="radio" name="settingProfile" value="walking_aid" /> <span data-i18n="mobility_walking_aid">Walking aid</span></label>
@@ -73,13 +73,13 @@
             <fieldset>
               <legend data-i18n="nav_language">Language</legend>
               <label class="companion-field" for="settingLanguage">
-                <span>Interface language</span>
+                <span data-i18n="settings_language_title">Interface language</span>
                 <select id="settingLanguage"></select>
               </label>
             </fieldset>
 
             <fieldset id="syncGroup" hidden>
-              <legend>Account</legend>
+              <legend data-i18n="settings_section_account">Account</legend>
               <label class="companion-check" for="settingSync">
                 <input id="settingSync" type="checkbox" />
                 <span>Sync my settings with my WitsPath account (website and Android app)</span>
@@ -93,6 +93,7 @@
     </div>
 
     <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
     <script src="/js/firebase-config.js"></script>
     <script src="/js/account/auth.js"></script>
     <script src="/js/account/settings-page.js"></script>

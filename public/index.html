@@ -47,7 +47,7 @@
 
       <aside id="settingsDrawer" class="drawer" aria-label="Preferences panel">
         <div class="drawer-header">
-          <h2>Preferences</h2>
+          <h2 data-i18n="nav_preferences">Preferences</h2>
           <button id="closeDrawer" class="icon-button" type="button" aria-label="Close preferences">
             ✕
           </button>
@@ -55,8 +55,8 @@
 
         <section class="drawer-account" aria-labelledby="accountHeading">
           <h3 id="accountHeading" class="eyebrow" data-i18n="nav_section_account">Account</h3>
-          <p id="accountName" class="drawer-account-name" data-i18n="nav_guest_title">Guest</p>
-          <p id="accountDetail" class="companion-small" data-i18n="nav_guest_subtitle">Sign in or create an account</p>
+          <p id="accountName" class="drawer-account-name">Guest</p>
+          <p id="accountDetail" class="companion-small">Sign in or create an account</p>
           <div id="accountSignedOut" class="drawer-links">
             <a class="secondary-button" href="/login.html" data-i18n="nav_log_in">Log in</a>
             <a class="secondary-button" href="/signup.html" data-i18n="nav_sign_up">Sign up</a>
@@ -76,27 +76,27 @@
 
         <div class="drawer-section">
           <label class="field" for="languageSelect">
-            <span>Language</span>
+            <span data-i18n="nav_language">Language</span>
             <select id="languageSelect" aria-label="Select language"></select>
           </label>
 
           <label class="checkbox-row" for="stepFreeOnly">
             <input id="stepFreeOnly" type="checkbox" />
-            <span>Step-free route only</span>
+            <span data-i18n="settings_step_free_title">Step-free route only</span>
           </label>
 
           <label class="checkbox-row" for="highContrastToggle">
             <input id="highContrastToggle" type="checkbox" />
-            <span>High contrast</span>
+            <span data-i18n="settings_high_contrast_title">High contrast</span>
           </label>
 
           <label class="field" for="textSizeSelect">
-            <span>Text size</span>
+            <span data-i18n="settings_text_size_title">Text size</span>
             <select id="textSizeSelect" aria-label="Select text size">
-              <option value="small">Small</option>
-              <option value="default" selected>Default</option>
-              <option value="large">Large</option>
-              <option value="huge">Huge</option>
+              <option value="small" data-i18n="text_size_small">Small</option>
+              <option value="default" selected data-i18n="text_size_default">Default</option>
+              <option value="large" data-i18n="text_size_large">Large</option>
+              <option value="huge" data-i18n="text_size_huge">Huge</option>
             </select>
           </label>
         </div>
@@ -115,7 +115,7 @@
             </label>
 
             <label class="field" for="toSelect">
-              <span>To</span>
+              <span data-i18n="home_label_to">To</span>
               <select id="toSelect" aria-label="Select destination"></select>
             </label>
           </div>
@@ -328,6 +328,7 @@
     <script src="/js/account/auth.js"></script>
     <script src="/js/account/drawer-account.js"></script>
     <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
     <script src="/js/places/reminders.js"></script>
     <script src="/js/planner/map.js"></script>
     <script src="/js/planner/navigation.js"></script>

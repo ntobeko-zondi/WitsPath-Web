@@ -27,7 +27,7 @@
           <p class="companion-small">Kept on this device, like in the Android app.</p>
 
           <form id="homeForm" class="page-form">
-            <h2>Home base</h2>
+            <h2 data-i18n="preferences_home_location_title">Home base</h2>
             <label class="companion-field" for="homeSelect">
               <span>Where you usually start</span>
               <select id="homeSelect"></select>
@@ -35,7 +35,7 @@
             <p class="companion-small">The route planner starts from here, and reminders use it.</p>
           </form>
 
-          <h2 id="savedListTitle">Your places</h2>
+          <h2 id="savedListTitle" data-i18n="preferences_section_places">Your places</h2>
           <ul id="savedList" class="page-places" aria-labelledby="savedListTitle"></ul>
           <form id="savedAddForm" class="page-form">
             <div class="page-row">
@@ -83,6 +83,7 @@
     </div>
 
     <script src="/js/settings.js"></script>
+    <script src="/js/i18n.js"></script>
     <script src="/js/places/campus-places.js"></script>
     <script src="/js/places/reminders.js"></script>
     <script src="/js/places/saved.js"></script>
