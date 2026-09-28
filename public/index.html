@@ -67,6 +67,13 @@
           </div>
         </section>
 
+        <nav class="drawer-nav" aria-labelledby="navHeading">
+          <h3 id="navHeading" class="eyebrow" data-i18n="nav_section_navigate">Navigate</h3>
+          <a href="/saved.html" data-i18n="nav_saved_places">Saved places</a>
+          <a href="/trip.html">Share my live trip</a>
+          <a href="/settings.html" data-i18n="nav_settings">Settings</a>
+        </nav>
+
         <div class="drawer-section">
           <label class="field" for="languageSelect">
             <span>Language</span>
@@ -98,6 +105,8 @@
       <main class="layout">
         <section class="panel route-panel" aria-labelledby="routeTitle">
           <h2 id="routeTitle">Plan a route</h2>
+          <p id="nextClassNote" class="next-class-note" hidden></p>
+          <p id="reminderBanner" class="companion-badge companion-badge-limited" role="alert" hidden></p>
 
           <div class="route-fields">
             <label class="field" for="fromSelect">
@@ -115,6 +124,7 @@
             <button id="routeButton" class="primary-button" type="button">Find route</button>
             <button id="swapButton" class="secondary-button" type="button">Swap</button>
           </div>
+          <button id="saveDestination" class="secondary-button save-destination" type="button">Save destination</button>
 
           <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
         </section>
@@ -317,7 +327,8 @@
     <script src="/js/firebase-config.js"></script>
     <script src="/js/account/auth.js"></script>
     <script src="/js/account/drawer-account.js"></script>
-    <script src="/js/planner/storage.js"></script>
+    <script src="/js/settings.js"></script>
+    <script src="/js/places/reminders.js"></script>
     <script src="/js/planner/map.js"></script>
     <script src="/js/planner/navigation.js"></script>
     <script src="/js/planner/report.js"></script>

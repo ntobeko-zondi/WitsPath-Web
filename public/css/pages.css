@@ -168,6 +168,16 @@
   display: none !important;
 }
 
+.page-status {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-panel h2 {
+  margin-top: 0.5rem;
+}
+
 .page-link-button {
   display: inline-flex;
   align-items: center;

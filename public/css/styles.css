@@ -482,6 +482,50 @@ svg .route-current {
   text-decoration: none;
 }
 
+.drawer-nav {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.drawer-nav .eyebrow {
+  margin: 0 0 0.25rem;
+}
+
+.drawer-nav a {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.8rem;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.drawer-nav a:hover,
+.drawer-nav a:focus-visible {
+  background: var(--panel-strong);
+}
+
+.drawer {
+  overflow-y: auto;
+}
+
+.save-destination {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+}
+
+.next-class-note {
+  margin: -0.4rem 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid var(--route);
+  border-radius: 0.5rem;
+  background: var(--panel-strong);
+  color: var(--ink);
+  line-height: 1.45;
+}
+
 /* ---- report a blocked path ---- */
 
 .report-panel {

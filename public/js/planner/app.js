@@ -51,26 +51,62 @@ function showStatus(message, type) {
   window.appElements.statusMessage.className = `status-message ${type}`;
 }
 
-// Unnamed junctions ("node" type) are waypoints, not destinations.
+function placeOption(nodeId, text) {
+  const option = document.createElement('option');
+  option.value = nodeId;
+  option.textContent = text;
+  return option;
+}
+
+// Home base and saved places first (like the Android room picker), then every
+// named place. Unnamed junctions ("node" type) are waypoints, not destinations.
 function buildNodeOptions(nodes) {
   const list = nodes
     .filter((node) => node && node.label && node.type !== 'node')
     .sort((a, b) => a.label.localeCompare(b.label));
+  const names = new Map(list.map((node) => [node.nodeId, node.label.trim()]));
+  const settings = window.WitsPathSettings;
+  const home = settings.get('homeNodeId');
+  const saved = settings.get('savedPlaces').filter((place) => names.has(place.nodeId));
 
   for (const select of [window.appElements.fromSelect, window.appElements.toSelect]) {
-    select.replaceChildren(
-      ...list.map((node) => {
-        const option = document.createElement('option');
-        option.value = node.nodeId;
-        option.textContent = node.label.trim();
-        return option;
-      })
-    );
+    const current = select.value;
+    const groups = [];
+    if (names.has(home) || saved.length) {
+      const mine = document.createElement('optgroup');
+      mine.label = 'Your places';
+      if (names.has(home)) mine.appendChild(placeOption(home, `Home base: ${names.get(home)}`));
+      saved.forEach((place) => mine.appendChild(placeOption(place.nodeId, place.detail ? `${place.label} (${place.detail})` : place.label)));
+      groups.push(mine);
+    }
+    const all = document.createElement('optgroup');
+    all.label = 'All places';
+    list.forEach((node) => all.appendChild(placeOption(node.nodeId, names.get(node.nodeId))));
+    groups.push(all);
+    select.replaceChildren(...groups);
+    if (current) select.value = current;
   }
 }
 
+function saveDestination() {
+  const settings = window.WitsPathSettings;
+  const nodeId = window.appElements.toSelect.value;
+  const label = window.appState.graph.nodes.find((node) => node.nodeId === nodeId)?.label.trim();
+  if (!label) return;
+  const saved = settings.get('savedPlaces');
+  if (saved.some((place) => place.nodeId === nodeId)) {
+    showStatus(`${label} is already in your saved places.`, '');
+    return;
+  }
+  settings.set('savedPlaces', [...saved, { nodeId, label, detail: '' }]);
+  buildNodeOptions(window.appState.graph.nodes);
+  showStatus(`Saved ${label} to your places.`, 'success');
+}
+
 function setDefaultSelection() {
-  const defaultFrom = 'nd_mu84hhsut';
+  // Start from the home base when one is set (as the Android app does).
+  const home = window.WitsPathSettings.get('homeNodeId');
+  const defaultFrom = window.appState.graph.nodes.some((node) => node.nodeId === home) ? home : 'nd_mu84hhsut';
   const defaultTo = 'nd_mu842rrrm';
   const fromValue = window.appState.graph.nodes.some((node) => node.nodeId === defaultFrom)
     ? defaultFrom
@@ -188,44 +224,54 @@ function loadGraph() {
     });
 }
 
+// Reflect the shared settings (settings.js) in the drawer's quick controls.
+function syncControls() {
+  const settings = window.WitsPathSettings;
+  window.appElements.languageSelect.value = settings.get('language');
+  window.appElements.textSizeSelect.value = settings.get('textSize');
+  window.appElements.stepFreeOnly.checked = settings.get('stepFreeOnly');
+  window.appElements.highContrastToggle.checked = settings.get('highContrast');
+  const language = settings.LANGUAGES.find((lang) => lang.tag === settings.get('language'));
+  window.appElements.languageButton.textContent = language && language.tag ? language.name : 'Language';
+}
+
 function wireControls() {
-  Object.entries(LANGUAGES).forEach(([tag, label]) => {
+  const settings = window.WitsPathSettings;
+  settings.LANGUAGES.forEach(({ tag, name }) => {
     const option = document.createElement('option');
     option.value = tag;
-    option.textContent = label;
+    option.textContent = name;
+    if (tag) option.lang = tag;
     window.appElements.languageSelect.appendChild(option);
   });
 
-  window.appElements.languageSelect.addEventListener('change', (event) => {
-    applyLanguage(event.target.value);
-  });
-
-  window.appElements.textSizeSelect.addEventListener('change', (event) => {
-    applyTextScale(event.target.value);
-  });
-
+  window.appElements.languageSelect.addEventListener('change', (event) => settings.set('language', event.target.value));
+  window.appElements.textSizeSelect.addEventListener('change', (event) => settings.set('textSize', event.target.value));
+  window.appElements.highContrastToggle.addEventListener('change', (event) => settings.set('highContrast', event.target.checked));
   window.appElements.stepFreeOnly.addEventListener('change', (event) => {
-    setStorage(STORAGE_KEYS.stepFreeOnly, String(event.target.checked));
+    settings.set('stepFreeOnly', event.target.checked);
     if (window.appState.route) {
       requestRoute();
     }
   });
-
-  window.appElements.highContrastToggle.addEventListener('change', (event) => {
-    applyContrast(event.target.checked);
-  });
+  settings.onChange(syncControls);
 
   window.appElements.navToggle.addEventListener('click', () => openDrawer());
   window.appElements.closeDrawer.addEventListener('click', () => closeDrawer());
   window.appElements.drawerBackdrop.addEventListener('click', () => closeDrawer());
   window.appElements.languageButton.addEventListener('click', () => openDrawer());
   window.appElements.contrastToggle.addEventListener('click', () => {
-    const nextValue = !(document.body.dataset.contrast === 'true');
-    window.appElements.highContrastToggle.checked = nextValue;
-    applyContrast(nextValue);
+    settings.set('highContrast', !settings.get('highContrast'));
   });
 
   window.appElements.routeButton.addEventListener('click', requestRoute);
+  document.getElementById('saveDestination').addEventListener('click', saveDestination);
+  const nextClass = window.WitsPathReminders?.describe();
+  const note = document.getElementById('nextClassNote');
+  if (nextClass && note) {
+    note.textContent = nextClass;
+    note.hidden = false;
+  }
   window.appElements.swapButton.addEventListener('click', swapLocations);
   window.appElements.zoomIn.addEventListener('click', () => zoomMap(1.2));
   window.appElements.zoomOut.addEventListener('click', () => zoomMap(1 / 1.2));
@@ -259,18 +305,7 @@ function wireControls() {
     applyMapTransform();
   });
 
-  const storedLanguage = readStorage(STORAGE_KEYS.language, '');
-  const storedTextSize = readStorage(STORAGE_KEYS.textSize, 'default');
-  const storedContrast = readStorage(STORAGE_KEYS.highContrast, 'false') === 'true';
-  const storedStepFree = readStorage(STORAGE_KEYS.stepFreeOnly, 'true') === 'true';
-
-  window.appElements.languageSelect.value = storedLanguage;
-  window.appElements.textSizeSelect.value = storedTextSize;
-  window.appElements.stepFreeOnly.checked = storedStepFree;
-  window.appElements.highContrastToggle.checked = storedContrast;
-  applyLanguage(storedLanguage);
-  applyTextScale(storedTextSize);
-  applyContrast(storedContrast);
+  syncControls();
 }
 
 wireControls();
