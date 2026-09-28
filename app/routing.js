@@ -6,8 +6,15 @@ function parseRouteNumber(value) {
   return Number.parseFloat(String(value).replace(',', '.'));
 }
 
-function computeEdgeWeight(edge) {
-  return parseRouteNumber(edge.distance) * parseRouteNumber(edge.accessibilityCost || 1);
+function computeEdgeWeight(edge, mobilityProfile = 'no-preference') {
+  const profileKey = {
+    'walking-aid': 'walkingAid',
+    'low-vision': 'lowVision',
+    'no-preference': 'noPreference'
+  }[mobilityProfile] || mobilityProfile;
+  const profileCosts = edge.accessibilityCosts || edge.accessibilityCostByProfile;
+  const accessibilityCost = profileCosts?.[profileKey] ?? edge.accessibilityCost ?? 1;
+  return parseRouteNumber(edge.distance) * parseRouteNumber(accessibilityCost || 1);
 }
 
 function computeDistance(nodeA, nodeB) {
@@ -46,9 +53,21 @@ function toFloorPixels(node) {
   };
 }
 
-function solveRoute(fromNode, toNode, requireAccessible) {
+function solveRoute(fromNode, toNode, mobilityProfile = 'no-preference', requireStepFree = false) {
+  if (typeof mobilityProfile === 'boolean') {
+    requireStepFree = mobilityProfile;
+    mobilityProfile = mobilityProfile ? 'wheelchair' : 'no-preference';
+  }
+
+  const profileKey = {
+    'walking-aid': 'walkingAid',
+    'low-vision': 'lowVision',
+    'no-preference': 'noPreference'
+  }[mobilityProfile] || mobilityProfile;
   const graphNodes = new Map(window.appState.graph.nodes.map((node) => [node.nodeId, node]));
   const adjacency = new Map();
+  const preferLifts = readBooleanSetting(STORAGE_KEYS.preferLifts);
+  const avoidSteepRamps = readBooleanSetting(STORAGE_KEYS.avoidSteepRamps);
 
   window.appState.graph.nodes.forEach((node) => adjacency.set(node.nodeId, []));
 
@@ -61,22 +80,36 @@ function solveRoute(fromNode, toNode, requireAccessible) {
     }
 
     const cost = parseRouteNumber(edge.accessibilityCost || 1);
-    const blocked = edge.status === 'blocked' || cost >= 999;
+    const profileCosts = edge.accessibilityCosts || edge.accessibilityCostByProfile;
+    const profileCost = parseRouteNumber(profileCosts?.[profileKey] ?? edge.accessibilityCost ?? 1);
+    const blocked = edge.status === 'blocked' || cost >= 999 || profileCost >= 999;
     const isStairsOnly = Boolean(edge.stairs) && !edge.ramp && !edge.elevator;
+    const isRamp = Boolean(edge.ramp) || edge.type === 'ramp';
+    const isLift = Boolean(edge.elevator) || Boolean(edge.lift) || edge.type === 'elevator';
+    const isSteepRamp = Boolean(edge.steepRamp) || Boolean(edge.steep) || edge.rampGrade === 'steep';
+    const profileAccess = edge.profileAccessibility?.[profileKey] ?? edge.accessibility?.[profileKey];
+    const inaccessibleForProfile = edge[`${profileKey}Accessible`] === false
+      || profileAccess === false
+      || profileAccess === 'inaccessible'
+      || edge.inaccessibleFor?.includes(mobilityProfile);
+    const excludesStairs = isStairsOnly && (requireStepFree || mobilityProfile === 'wheelchair');
 
-    if (blocked || (requireAccessible && isStairsOnly)) {
+    if (blocked || inaccessibleForProfile || excludesStairs || (avoidSteepRamps && isRamp && isSteepRamp)) {
       return;
     }
+
+    const profilePenalty = mobilityProfile === 'walking-aid' && isStairsOnly ? 1.5 : 1;
+    const liftPreference = preferLifts && isLift ? 0.75 : preferLifts && isRamp ? 1.35 : 1;
 
     const fromEntry = {
       node: to,
       edge,
-      weight: computeEdgeWeight(edge)
+      weight: computeEdgeWeight(edge, mobilityProfile) * profilePenalty * liftPreference
     };
     const toEntry = {
       node: from,
       edge,
-      weight: computeEdgeWeight(edge)
+      weight: computeEdgeWeight(edge, mobilityProfile) * profilePenalty * liftPreference
     };
 
     adjacency.get(from.nodeId).push(fromEntry);

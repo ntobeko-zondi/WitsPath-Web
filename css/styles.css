@@ -88,6 +88,7 @@ input:focus-visible,
   flex: 0 0 160px;
   align-items: center;
   gap: 13px;
+  margin-left: auto;
   color: #fff;
   text-decoration: none;
 }
@@ -121,7 +122,7 @@ input:focus-visible,
   background: rgba(255, 255, 255, .45);
 }
 
-.product-title { min-width: 0; }
+.product-title { flex: 1 1 auto; min-width: 0; margin: 0; text-align: left; }
 .product-title h1 { margin: 0 0 3px; font-size: 21px; font-weight: 600; line-height: 1.2; }
 .product-title p { margin: 0; color: rgba(255, 255, 255, .83); font-size: 14px; }
 
@@ -221,7 +222,7 @@ option { background: var(--white); color: var(--ink); }
 .travel-modes {
   display: grid;
   flex: 0 0 91px;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0 17px 13px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -233,22 +234,36 @@ option { background: var(--white); color: var(--ink); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 2px 6px;
+  gap: 3px;
+  padding: 7px 1px 5px;
   border: 0;
   border-right: 1px solid var(--line);
   background: var(--panel);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.15;
   text-align: center;
   cursor: pointer;
 }
 
 .mode-button:last-child { border-right: 0; }
-.mode-button svg { width: 23px; height: 23px; fill: none; stroke: var(--wits-blue); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mode-button svg { width: 23px; height: 23px; fill: none; stroke: var(--wits-blue-700); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .mode-button.is-selected { background: var(--mode-selected-background); color: var(--mode-selected-ink); }
 .mode-button.is-selected svg { stroke: var(--mode-selected-ink); }
+
+.account-nav { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 28px; border-bottom: 1px solid var(--line); background: var(--white); }
+.account-nav a { color: var(--wits-blue-700); font-weight: 600; text-decoration: none; }
+.account-nav-current { color: var(--ink-muted); font-size: 14px; }
+.account-nav-links { display: flex; align-items: center; gap: 20px; }
+.account-nav a:focus-visible { outline: 3px solid var(--wits-blue-500); outline-offset: 3px; }
+.home-nav { position: relative; z-index: 5; flex: 0 0 auto; }
+
+@media (max-width: 560px) {
+  .account-nav { padding: 10px 14px; }
+  .account-nav-links { flex-wrap: wrap; gap: 10px 14px; }
+}
+
+.mode-button svg { display: block; visibility: visible; opacity: 1; }
 
 .route-summary {
   display: flex;
@@ -276,6 +291,13 @@ option { background: var(--white); color: var(--ink); }
 }
 
 .journey-start .location-field select { font-size: 13px; font-weight: 400; }
+.journey-start .location-field { flex: 1 1 auto; }
+.start-location-controls { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.start-location-controls select { flex: 1 1 auto; width: 0; }
+.location-refresh { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--white); color: var(--wits-blue-700); cursor: pointer; }
+.location-refresh svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.location-refresh:hover { border-color: var(--wits-blue-500); background: var(--panel-strong); }
+.location-refresh:disabled { opacity: .6; cursor: progress; }
 
 .steps-list {
   display: grid;
@@ -408,7 +430,7 @@ option { background: var(--white); color: var(--ink); }
   border: 0;
   border-bottom: 1px solid var(--line);
   background: var(--map-controls);
-  color: var(--wits-blue-900);
+  color: var(--ink);
   font-size: 27px;
   font-weight: 400;
   cursor: pointer;
@@ -499,3 +521,4 @@ svg polyline {
 
 svg .route-end { fill: #113f67; stroke: #fff; stroke-width: 3; }
 svg .route-start { fill: #289761; stroke: #fff; stroke-width: 3; }
+.flagged-path-marker { fill: #ffd166; stroke: #8a3c00; stroke-width: 4; }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage your WitsPath account and accessibility settings." />
+    <meta name="theme-color" content="#073b67" />
+    <title>Account | WitsPath</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+    <link rel="stylesheet" href="css/account.css" />
+  </head>
+  <body>
+    <div class="account-shell">
+      <header class="topbar" aria-label="WitsPath header">
+        <div class="product-title">
+          <h1>WitsPath Account</h1>
+          <p>Accessibility and routing</p>
+        </div>
+        <span class="header-divider" aria-hidden="true"></span>
+        <a class="university-brand" href="index.html" aria-label="Wits University home">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 40 48">
+              <path d="M20 2 35 8v14c0 10-6 17-15 23C11 39 5 32 5 22V8L20 2Z" />
+              <path d="M9 12h22v12H9zM9 27c5 0 7 5 11 5s6-5 11-5" />
+              <path d="M15 12v12m10-12v12M4 19H1m38 0h-3" />
+              <circle cx="20" cy="7" r="2" />
+            </svg>
+          </span>
+          <span class="university-wordmark">
+            <span class="wits-word">WITS</span>
+            <span class="university-word">UNIVERSITY</span>
+          </span>
+        </a>
+      </header>
+
+      <nav class="account-nav" aria-label="Account navigation">
+        <a class="back-to-home" href="index.html"><span aria-hidden="true">←</span> Back to Home</a>
+        <div class="account-nav-links">
+          <a href="index.html">Home</a>
+          <a href="reports.html">My Reports</a>
+          <span class="account-nav-current" aria-current="page">Account</span>
+        </div>
+      </nav>
+
+      <main class="account-content">
+        <h2>Account</h2>
+        <section class="account-section" aria-labelledby="accountInfoTitle">
+          <h3 id="accountInfoTitle">Account Information</h3>
+          <div class="account-fields">
+            <label class="account-field" for="username"><span>Username</span><input id="username" type="text" autocomplete="nickname" maxlength="80" disabled /></label>
+            <label class="account-field" for="email"><span>Email address</span><input id="email" type="email" autocomplete="email" maxlength="254" disabled /></label>
+          </div>
+          <div class="account-edit-actions"><button class="account-save account-edit" id="editAccount" type="button">Edit</button><button class="account-save" id="saveAccount" type="button" disabled>Save Changes</button></div>
+        </section>
+
+        <section class="account-section" aria-labelledby="accessibilityTitle">
+          <h3 id="accessibilityTitle">Accessibility and Routing</h3>
+          <div class="account-fields">
+            <label class="account-field" for="language"><span>Language</span><select id="language" data-setting="language"></select></label>
+            <label class="account-field" for="textSize"><span>Text Size</span><select id="textSize" data-setting="textSize"><option value="small">Small</option><option value="default">Default</option><option value="large">Large</option><option value="huge">Huge</option></select></label>
+          </div>
+          <div class="setting-list">
+            <label class="setting-row" for="highContrast"><span>High Contrast</span><input id="highContrast" type="checkbox" data-setting="highContrast" /></label>
+            <label class="setting-row" for="darkMode"><span>Dark Mode</span><input id="darkMode" type="checkbox" data-setting="darkMode" /></label>
+            <label class="setting-row" for="screenReaderDescriptions"><span>Screen Reader Descriptions</span><input id="screenReaderDescriptions" type="checkbox" data-setting="screenReaderDescriptions" /></label>
+          </div>
+          <fieldset class="profile-options" aria-describedby="mobilityProfileDescription">
+            <legend id="mobilityProfileLabel">Mobility Profile</legend>
+            <p id="mobilityProfileDescription" class="account-description profile-description">Choose a routing profile. Screen readers announce the matching homepage route mode and mobility behavior.</p>
+            <label class="profile-option"><input type="radio" name="mobilityProfile" value="wheelchair" /><span>Wheelchair</span><small>Wheelchair Accessible routes</small></label>
+            <label class="profile-option"><input type="radio" name="mobilityProfile" value="walking-aid" /><span>Walking Aid</span><small>Walking Aid routes</small></label>
+            <label class="profile-option"><input type="radio" name="mobilityProfile" value="low-vision" /><span>Low Vision</span><small>Visual Assistance routes</small></label>
+            <label class="profile-option"><input type="radio" name="mobilityProfile" value="no-preference" /><span>No Preference</span><small>General routes</small></label>
+          </fieldset>
+          <div class="setting-list">
+            <label class="setting-row" for="stepFreeOnly"><span>Step-free route only</span><input id="stepFreeOnly" type="checkbox" data-setting="stepFreeOnly" /></label>
+            <label class="setting-row" for="preferLifts"><span>Prefer lifts over ramps</span><input id="preferLifts" type="checkbox" data-setting="preferLifts" /></label>
+            <label class="setting-row" for="avoidSteepRamps"><span>Avoid steep ramps</span><input id="avoidSteepRamps" type="checkbox" data-setting="avoidSteepRamps" /></label>
+          </div>
+          <fieldset class="choice-setting">
+            <legend>Show Distance As</legend>
+            <label><input type="radio" name="distanceDisplay" value="meters" data-setting="distanceDisplay" /> Meters</label>
+            <label><input type="radio" name="distanceDisplay" value="feet" data-setting="distanceDisplay" /> Feet</label>
+            <label><input type="radio" name="distanceDisplay" value="minutes" data-setting="distanceDisplay" /> Minutes</label>
+          </fieldset>
+          <label class="setting-row" for="showFlaggedPaths"><span>Show Flagged Paths</span><input id="showFlaggedPaths" type="checkbox" data-setting="showFlaggedPaths" /></label>
+          <p class="account-description">Highlights locations with saved reports on your route. A report is a notice, not confirmation that a path is inaccessible.</p>
+        </section>
+
+        <section class="account-section" aria-labelledby="navigationTitle">
+          <h3 id="navigationTitle">Navigation</h3>
+          <div class="setting-list">
+            <label class="setting-row" for="voiceGuidance"><span>Voice Guidance</span><input id="voiceGuidance" type="checkbox" data-setting="voiceGuidance" /></label>
+            <label class="setting-row" for="vibrationCues"><span>Vibration Cues</span><input id="vibrationCues" type="checkbox" data-setting="vibrationCues" /></label>
+            <label class="setting-row" for="autoDetectLocation"><span>Automatically Detect My Location</span><input id="autoDetectLocation" type="checkbox" data-setting="autoDetectLocation" /></label>
+          </div>
+        </section>
+
+        <section class="account-section" aria-labelledby="syncTitle">
+          <h3 id="syncTitle">Settings Sync</h3>
+          <label class="setting-row" for="syncSettings"><span>Sync settings across devices</span><input id="syncSettings" type="checkbox" data-setting="syncSettings" /></label>
+          <p class="account-description">This preference is stored locally. Cloud syncing is not enabled.</p>
+        </section>
+        <p id="profileStatus" class="profile-status" role="status" aria-live="polite"></p>
+      </main>
+    </div>
+
+    <script src="app/storage.js"></script>
+    <script src="app/account.js"></script>
+  </body>
+</html>

@@ -7,18 +7,18 @@
 }
 
 body[data-theme="dark"] {
-  --ink: #eef4fc;
-  --ink-muted: #bac9dc;
-  --white: #142239;
-  --panel: #101c30;
-  --panel-strong: #1b2d47;
-  --line: #314560;
+  --ink: #f5f8ff;
+  --ink-muted: #d2deed;
+  --white: #172941;
+  --panel: #101e32;
+  --panel-strong: #263c56;
+  --line: #617991;
   --success: #67d69a;
   --route: #63aaff;
   --route-soft: rgba(99, 170, 255, .2);
   --shadow: 0 18px 46px rgba(0, 0, 0, .3);
   --body-bg: #0b1525;
-  --focus-ring: 0 0 0 3px rgba(99, 170, 255, .38);
+  --focus-ring: 0 0 0 3px #8cc8ff;
   --button-text: #fff;
   --topbar-bg: linear-gradient(135deg, #071b33, #123d73);
   --map-background: #18283c;
@@ -32,6 +32,15 @@ body[data-theme="dark"] {
   --mode-selected-background: #203956;
   --mode-selected-ink: #c7e1ff;
   color-scheme: dark;
+}
+
+body[data-theme="dark"]:not([data-contrast="true"]) .account-nav a {
+  color: #a9d4ff;
+}
+
+body[data-theme="dark"]:not([data-contrast="true"]) .location-refresh,
+body[data-theme="dark"]:not([data-contrast="true"]) .compass {
+  color: var(--ink);
 }
 
 body[data-contrast="true"] {
@@ -71,7 +80,7 @@ body[data-contrast="true"] .map-surface > .campus-map-art {
 
 body[data-theme="dark"] .location-field select,
 body[data-theme="dark"] .field select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23bac9dc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d2deed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 body[data-contrast="true"] .location-field select,
