@@ -1,80 +1,55 @@
-function renderRoute(route) {
-  const svg = window.appElements.routeOverlay;
-  svg.innerHTML = '';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  if (!route || route.length < 2) {
+function svgCircle(point, className) {
+  const circle = document.createElementNS(SVG_NS, 'circle');
+  circle.setAttribute('cx', point.x);
+  circle.setAttribute('cy', point.y);
+  circle.setAttribute('r', 8);
+  circle.setAttribute('class', className);
+  return circle;
+}
+
+/**
+ * Draw a route card from /api/route: the line on the campus map (points are
+ * in map pixels) and the verified turn-by-turn steps.
+ */
+function renderRoute(card) {
+  const svg = window.appElements.routeOverlay;
+  svg.replaceChildren();
+
+  if (!card || !card.points || card.points.length < 2) {
     window.appElements.guidanceText.textContent = 'Choose your start and destination to begin.';
-    window.appElements.stepsList.innerHTML = '';
+    window.appElements.stepsList.replaceChildren();
     return;
   }
 
-  const points = route
-    .map((node) => {
-      const pixel = toFloorPixels(node);
-      return `${pixel.x},${pixel.y}`;
+  const polyline = document.createElementNS(SVG_NS, 'polyline');
+  polyline.setAttribute('points', card.points.map((point) => `${point.x},${point.y}`).join(' '));
+  svg.append(polyline, svgCircle(card.points[0], 'route-start'), svgCircle(card.points[card.points.length - 1], 'route-end'));
+
+  const summary = [`${Math.round(card.distanceM)} metres`];
+  if (card.travelTime) {
+    summary.push(`about ${card.travelTime.minutes} ${card.travelTime.minutes === 1 ? 'minute' : 'minutes'} (estimate)`);
+  }
+  summary.push(card.accessible ? 'step-free' : 'not confirmed step-free');
+  window.appElements.guidanceText.textContent = summary.join(' • ');
+
+  window.appElements.stepsList.replaceChildren(
+    ...card.steps.map((step, index) => {
+      const li = document.createElement('li');
+      const number = document.createElement('span');
+      number.className = 'step-index';
+      number.textContent = String(index + 1);
+      const copy = document.createElement('div');
+      copy.className = 'step-copy';
+      const text = document.createElement('strong');
+      text.textContent = step.text;
+      text.lang = step.lang;
+      copy.appendChild(text);
+      li.append(number, copy);
+      return li;
     })
-    .join(' ');
-
-  const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-  polyline.setAttribute('points', points);
-  svg.appendChild(polyline);
-
-  const startPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  const endPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  const startPixel = toFloorPixels(route[0]);
-  const endPixel = toFloorPixels(route[route.length - 1]);
-
-  startPoint.setAttribute('cx', startPixel.x);
-  startPoint.setAttribute('cy', startPixel.y);
-  startPoint.setAttribute('r', 8);
-  startPoint.setAttribute('class', 'route-start');
-
-  endPoint.setAttribute('cx', endPixel.x);
-  endPoint.setAttribute('cy', endPixel.y);
-  endPoint.setAttribute('r', 8);
-  endPoint.setAttribute('class', 'route-end');
-
-  svg.appendChild(startPoint);
-  svg.appendChild(endPoint);
-
-  const totalDistance = route.reduce((sum, node, index) => {
-    if (index === 0) return sum;
-    const previousNode = route[index - 1];
-    return sum + computeDistance(previousNode, node, true);
-  }, 0);
-
-  const stepDetails = route.map((node, index) => {
-    if (index === route.length - 1) {
-      return {
-        title: `Arrive at ${node.label || node.nodeId}`,
-        subtitle: 'Destination reached',
-        index: index + 1
-      };
-    }
-
-    const nextNode = route[index + 1];
-    const distance = computeDistance(node, nextNode, true);
-    return {
-      title: `Walk ${Math.round(distance)} metres to ${nextNode.label || nextNode.nodeId}`,
-      subtitle: node.label || node.nodeId,
-      index: index + 1
-    };
-  });
-
-  window.appElements.guidanceText.textContent = `Total route length: ${Math.round(totalDistance)} metres`;
-  window.appElements.stepsList.innerHTML = stepDetails
-    .map(
-      (step) => `
-        <li>
-          <span class="step-index">${step.index}</span>
-          <div class="step-copy">
-            <strong>${step.title}</strong>
-            <small>${step.subtitle}</small>
-          </div>
-        </li>
-      `
-    )
-    .join('');
+  );
 }
 
 function resetMapView() {

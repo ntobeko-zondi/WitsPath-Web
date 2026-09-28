@@ -51,17 +51,22 @@ function showStatus(message, type) {
   window.appElements.statusMessage.className = `status-message ${type}`;
 }
 
+// Unnamed junctions ("node" type) are waypoints, not destinations.
 function buildNodeOptions(nodes) {
   const list = nodes
-    .filter((node) => node && node.label)
+    .filter((node) => node && node.label && node.type !== 'node')
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  const html = list
-    .map((node) => `<option value="${node.nodeId}">${node.label}</option>`)
-    .join('');
-
-  window.appElements.fromSelect.innerHTML = html;
-  window.appElements.toSelect.innerHTML = html;
+  for (const select of [window.appElements.fromSelect, window.appElements.toSelect]) {
+    select.replaceChildren(
+      ...list.map((node) => {
+        const option = document.createElement('option');
+        option.value = node.nodeId;
+        option.textContent = node.label.trim();
+        return option;
+      })
+    );
+  }
 }
 
 function setDefaultSelection() {
@@ -85,7 +90,11 @@ function swapLocations() {
   requestRoute();
 }
 
-function requestRoute() {
+// Routes come from the shared WitsPath routing engine (the same A* as the
+// Android app) via /api/route. This page never computes a route itself.
+let routeRequestId = 0;
+
+async function requestRoute() {
   if (!window.appState.graph) {
     return;
   }
@@ -97,38 +106,59 @@ function requestRoute() {
     showStatus('Choose both a start and a destination.', 'error');
     return;
   }
-
-  const fromNode = findNode(fromNodeId);
-  const toNode = findNode(toNodeId);
-
-  if (!fromNode || !toNode) {
-    showStatus('One of the selected locations is invalid.', 'error');
-    return;
-  }
-
-  const requireAccessible = window.appElements.stepFreeOnly.checked;
-  const route = solveRoute(fromNode, toNode, requireAccessible);
-
-  if (!route || route.length < 2) {
-    const detail = requireAccessible
-      ? 'No step-free route is available for that journey.'
-      : 'No route could be found between those locations.';
-    showStatus(detail, 'error');
+  if (fromNodeId === toNodeId) {
+    showStatus('Start and destination are the same place.', 'error');
     renderRoute(null);
     return;
   }
 
-  window.appState.route = route;
-  const totalDistance = route.reduce((sum, node, index) => {
-    if (index === 0) return sum;
-    const previousNode = route[index - 1];
-    return sum + computeDistance(previousNode, node, true);
-  }, 0);
+  const requestId = ++routeRequestId;
+  showStatus('Finding a route…', '');
+  let response;
+  let body;
+  try {
+    response = await fetch('/api/route', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        fromNodeId,
+        toNodeId,
+        accessible: window.appElements.stepFreeOnly.checked,
+        lang: window.WitsPathSettings?.get('language') || document.documentElement.lang,
+        speedMultiplier: window.WitsPathSettings?.get('walkingSpeed')
+      })
+    });
+    body = await response.json();
+  } catch {
+    if (requestId !== routeRequestId) return;
+    showStatus("Can't reach the WitsPath server right now.", 'error');
+    renderRoute(null);
+    return;
+  }
+  // A newer request (e.g. a quick swap) has replaced this one.
+  if (requestId !== routeRequestId) return;
 
-  const routeLabel = `${fromNode.label || fromNode.nodeId} to ${toNode.label || toNode.nodeId}`;
-  window.appElements.mapTitle.textContent = routeLabel;
-  showStatus(`Route ready • ${Math.round(totalDistance)} metres`, 'success');
-  renderRoute(route);
+  if (!response.ok) {
+    const stepFree = window.appElements.stepFreeOnly.checked;
+    const message =
+      body.error === 'no_route'
+        ? stepFree
+          ? 'No step-free route is available for that journey.'
+          : 'No route could be found between those locations.'
+        : body.error === 'route_blocked'
+          ? 'Part of that route is reported blocked, and no confirmed alternative is available.'
+          : body.error === 'routing_unavailable'
+            ? 'Route planning is unavailable right now.'
+            : "Couldn't confirm a route right now.";
+    showStatus(message, 'error');
+    renderRoute(null);
+    return;
+  }
+
+  window.appState.route = body;
+  window.appElements.mapTitle.textContent = `${body.from} to ${body.to}`;
+  showStatus(`Route ready • ${Math.round(body.distanceM)} metres`, 'success');
+  renderRoute(body);
 }
 
 function loadGraph() {

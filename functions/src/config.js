@@ -42,30 +42,27 @@ module.exports = {
     MAX_NAME_CHARS: 40
   },
 
-  // Travel-time assumptions. Deliberately on the slow side so estimates err
-  // towards leaving earlier. Always surfaced to the user as an estimate.
-  SPEED_MPS: {
-    wheelchair: 0.8,
-    ambulatory: 1.1
-  },
-
-  // Routing source of truth (constraint #4 in the brief). See
-  // src/routing/routingService.js.
-  //   'http'        - call the shared routing service at ROUTING_SERVICE_URL
-  //                   (the extracted Android A* engine). Target state.
-  //   'fixture'     - PLACEHOLDER: only returns hand-seeded routes. Dev only.
-  //   'unavailable' - every get_route returns an explicit error.
+  // Routing source of truth (constraint #4 in the brief): the shared WitsPath
+  // routing engine in routing/ (the Android app's A* + travel-time estimator).
+  //   'http'        - call the engine at ROUTING_SERVICE_URL.
+  //   'unavailable' - every route request returns an explicit error.
   // Defaults to 'unavailable' so a misconfigured deployment fails closed.
   ROUTING_MODE: process.env.ROUTING_MODE || 'unavailable',
   ROUTING_SERVICE_URL: process.env.ROUTING_SERVICE_URL || '',
+  // 'id-token' when the engine is a private Cloud Run service; 'none' locally.
+  ROUTING_SERVICE_AUTH: process.env.ROUTING_SERVICE_AUTH || 'none',
   ROUTING_TIMEOUT_MS: 8000,
+  // Bounds for the walking-speed multiplier a user can set (1.0 = 1.4 m/s).
+  SPEED_MULTIPLIER_MIN: 0.3,
+  SPEED_MULTIPLIER_MAX: 2.0,
 
   VULAVULA_TRANSCRIBE_URL:
     process.env.VULAVULA_TRANSCRIBE_URL || 'https://api.lelapa.ai/v1/transcribe/sync',
 
-  // Firestore collection names. The graph collection names must match the
-  // Android app's schema. TODO(blocking): confirm these against the Android
-  // project - they are inferred from data/wits-west-map.json, not verified.
+  // Firestore collection names. nodes, edges, reports and users are shared with
+  // the Android app (confirmed against its source). The Android app loads
+  // floors from its bundled JSON, not Firestore, so seed them with
+  // `node scripts/seed-firestore.js --floors`.
   COLLECTIONS: {
     graphNodes: process.env.GRAPH_NODES_COLLECTION || 'nodes',
     graphEdges: process.env.GRAPH_EDGES_COLLECTION || 'edges',
@@ -77,8 +74,6 @@ module.exports = {
     sharedRoutes: 'shared_routes',
     chatSessions: 'chat_sessions',
     phraseTemplates: 'phrase_templates',
-    // Placeholder-only data for ROUTING_MODE=fixture.
-    routeFixtures: 'dev_route_fixtures',
     // Team-pinned buildings/entrances with GPS coordinates (all campuses).
     campusPlaces: 'campus_places',
     liveTrips: 'live_trips'

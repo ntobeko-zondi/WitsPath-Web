@@ -16,11 +16,12 @@ test('system prompt keeps the validated base rules verbatim', () => {
 
 test('a 1-minute estimate uses the singular phrase', async () => {
   const deps = makeDeps([
-    callsTools(toolUse('get_route', { from_node_id: NODES.msb, to_node_id: NODES.msbLabs, accessible: true })),
-    callsTools(toolUse('get_travel_time', { distance_m: 43.1 })),
+    callsTools(toolUse('get_route', { from_node_id: NODES.commerceLibrary, to_node_id: NODES.towerOfLight, accessible: true })),
+    callsTools(toolUse('get_travel_time', { distance_m: 37.1 })),
     says('Route found. About 1 minute, as an estimate.')
   ]);
-  const result = await handleMessage(deps, { text: 'MSB to MSB labs' });
+  // Engine estimate: 56 s -> 1 minute.
+  const result = await handleMessage(deps, { text: 'Commerce Library to Tower of Light' });
   const time = result.route.steps.find((step) => step.phraseKey.startsWith('estimated_time'));
   assert.equal(time.phraseKey, 'estimated_time_one');
   assert.equal(time.text, 'Estimated time: about 1 minute.');
@@ -46,7 +47,7 @@ test('test case 1 (no hallucination): unseeded pair -> error reaches the model, 
   const result = await handleMessage(deps, { text: 'How do I get from Flower Hall to the Law Clinic?' });
 
   const [, routeResult] = toolResultsSentOn(deps.anthropic.calls[1]);
-  assert.equal(routeResult.error, 'no_route_data');
+  assert.equal(routeResult.error, 'no_route');
   assert.equal(routeResult.is_error, true);
   assert.match(routeResult.instruction, /can't confirm a route/);
   assert.equal(result.route, null);
@@ -77,7 +78,7 @@ test('grounded route: numbers from tools pass, and the route card is built from 
   assert.equal(result.route.from, 'Mathematical Science Labs');
   assert.equal(result.route.to, 'Genmin Laboratories');
   assert.equal(result.route.distanceM, 82);
-  assert.equal(result.route.routingSource, 'placeholder-fixture');
+  assert.equal(result.route.routingSource, 'shared-routing-engine');
   assert.deepEqual(result.route.travelTime, { minutes: 2, basis: 'estimate' });
   assert.deepEqual(
     result.route.steps.map((step) => step.phraseKey),

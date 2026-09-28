@@ -6,8 +6,8 @@ const { TOOLS } = require('../tools/definitions');
 const { runTool } = require('../tools/handlers');
 const { SYSTEM_PROMPT } = require('./systemPrompt');
 const { collectNumbers, findUngroundedNumbers, capGrounded } = require('./numberGuard');
-const { buildDirections } = require('../directions/buildDirections');
-const { isKnownLanguage, tierFor, SOURCE_LANGUAGE } = require('../language/languages');
+const { buildRouteCard } = require('../routing/routeCard');
+const { isKnownLanguage, tierFor } = require('../language/languages');
 const { newId } = require('../store/memoryStore');
 
 const SAFE_REPLY =
@@ -56,7 +56,7 @@ async function handleMessage(deps, request) {
     languageUsed: null,
     transcriptJson: '[]',
     groundedNumbers: [],
-    groundedDistances: [],
+    groundedRoutes: [],
     routes: [],
     mobilityProfileUsed: false
   };
@@ -66,7 +66,8 @@ async function handleMessage(deps, request) {
     routing,
     log,
     userId: request.userId || null,
-    groundedDistances: new Set(session.groundedDistances),
+    groundedRoutes: [...(session.groundedRoutes || [])],
+    speedMultiplier: request.speedMultiplier || 1,
     declaredLang: null,
     route: null,
     travelTime: null,
@@ -151,7 +152,7 @@ async function handleMessage(deps, request) {
   }
 
   const language = resolveLanguage(request, ctx);
-  const routeCard = ctx.route ? await buildRouteCard(store, ctx, language) : null;
+  const routeCard = ctx.route ? await companionRouteCard(store, ctx, language) : null;
 
   // Persist.
   const userMessage = { role: 'user', text, lang: request.inputLang || null, timestamp: now };
@@ -165,7 +166,7 @@ async function handleMessage(deps, request) {
   session.languageUsed = language.code || session.languageUsed;
   session.transcriptJson = JSON.stringify(messages);
   session.groundedNumbers = capGrounded(grounded);
-  session.groundedDistances = [...ctx.groundedDistances];
+  session.groundedRoutes = ctx.groundedRoutes.slice(-MAX_SHAREABLE_ROUTES);
   session.mobilityProfileUsed = session.mobilityProfileUsed || ctx.mobilityProfileUsed;
   if (routeCard) session.routes = [...(session.routes || []), routeCard].slice(-MAX_SHAREABLE_ROUTES);
   session.updatedAt = new Date();
@@ -236,31 +237,12 @@ function resolveLanguage(request, ctx) {
   return { code, source, tier: code ? tierFor(code) : 'unconfirmed' };
 }
 
-async function buildRouteCard(store, ctx, language) {
-  const directionsLang = language.code && isKnownLanguage(language.code) ? language.code : SOURCE_LANGUAGE;
-  const templates = await store.getPhraseTemplates([...new Set([directionsLang, SOURCE_LANGUAGE])]);
+// Travel time goes on the card only if the model asked for it for this route.
+function companionRouteCard(store, ctx, language) {
   const route = ctx.route;
   const travelTime =
-    ctx.travelTime && Math.abs(ctx.travelTime.distance_m - route.distance_m) < 0.05
-      ? { minutes: ctx.travelTime.minutes, basis: 'estimate' }
-      : null;
-  const directions = buildDirections(route, directionsLang, templates, travelTime);
-
-  return {
-    // Lets the user share this exact card, not just the latest route.
-    routeId: newId(),
-    from: route.path[0].name,
-    to: route.path[route.path.length - 1].name,
-    fromNodeId: route.path[0].node_id,
-    toNodeId: route.path[route.path.length - 1].node_id,
-    distanceM: route.distance_m,
-    accessible: route.accessible,
-    steps: directions.steps.map(({ phraseKey, params, text, lang }) => ({ phraseKey, params, text, lang })),
-    directionsLang,
-    fallbackToEnglish: directions.fallbackToEnglish,
-    routingSource: route.source,
-    travelTime
-  };
+    ctx.travelTime && Math.abs(ctx.travelTime.distance_m - route.distance_m) < 0.05 ? { minutes: ctx.travelTime.minutes } : null;
+  return buildRouteCard(store, route, language.code, travelTime);
 }
 
 // Report text the user typed may sit in this or the previous couple of user

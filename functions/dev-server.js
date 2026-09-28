@@ -2,21 +2,44 @@
 
 // Local development server: serves the website and the same /api/** routes as
 // the Cloud Function, backed by the in-memory store seeded from
-// data/wits-west-map.json. Run: npm run dev   (from functions/)
+// public/data/wits-west-map.json. Run: npm run dev   (from functions/)
 //
 // Reads secrets from functions/.secret.local (git-ignored, never deployed -
 // unlike functions/.env, which Firebase uploads with the function) and
-// non-secret settings from functions/.env. Routing defaults to the
-// PLACEHOLDER fixture mode here; production defaults to 'unavailable'.
+// non-secret settings from functions/.env.
+//
+// Routing: if the shared routing engine has been built (routing/build.ps1 or
+// routing/build.sh) and ROUTING_MODE isn't set, it is started automatically
+// on ROUTING_PORT (8081) and used. Otherwise routes are unavailable.
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 for (const file of ['.secret.local', '.env']) {
   if (fs.existsSync(path.join(__dirname, file))) process.loadEnvFile(path.join(__dirname, file));
 }
-process.env.ROUTING_MODE = process.env.ROUTING_MODE || 'fixture';
+
+const ROUTING_JAR = path.resolve(__dirname, '..', 'routing', 'build', 'witspath-routing.jar');
+const ROUTING_PORT = Number(process.env.ROUTING_PORT || 8081);
+let routingProcess = null;
+if (!process.env.ROUTING_MODE && fs.existsSync(ROUTING_JAR)) {
+  routingProcess = spawn('java', ['-jar', ROUTING_JAR], {
+    env: { ...process.env, PORT: String(ROUTING_PORT) },
+    stdio: ['ignore', 'inherit', 'inherit']
+  });
+  routingProcess.on('error', (error) => console.error(`Could not start the routing engine (is Java installed?): ${error.message}`));
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+      routingProcess.kill();
+      process.exit(0);
+    });
+  }
+  process.on('exit', () => routingProcess.kill());
+  process.env.ROUTING_MODE = 'http';
+  process.env.ROUTING_SERVICE_URL = `http://localhost:${ROUTING_PORT}/v1/route`;
+}
 
 const Anthropic = require('@anthropic-ai/sdk');
 const config = require('./src/config');
@@ -75,7 +98,7 @@ const routing = createRoutingService({
   mode: config.ROUTING_MODE,
   url: config.ROUTING_SERVICE_URL,
   timeoutMs: config.ROUTING_TIMEOUT_MS,
-  store
+  auth: config.ROUTING_SERVICE_AUTH
 });
 
 let anthropic = null;
@@ -177,7 +200,13 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`WitsPath dev server: http://localhost:${PORT}`);
-  console.log(`Routing mode: ${config.ROUTING_MODE} (${routing.source})`);
+  console.log(
+    routingProcess
+      ? `Routing: shared engine started on port ${ROUTING_PORT}`
+      : config.ROUTING_MODE === 'http'
+        ? `Routing: shared engine at ${config.ROUTING_SERVICE_URL}`
+        : 'Routing: unavailable - build the engine with routing/build.ps1 (Windows) or routing/build.sh (JDK 11+ needed)'
+  );
   if (!process.env.ANTHROPIC_API_KEY) console.log('ANTHROPIC_API_KEY not set - companion replies will return 503.');
   console.log(
     process.env.ADMIN_API_TOKEN

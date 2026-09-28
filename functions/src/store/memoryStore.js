@@ -9,10 +9,9 @@ const { buildSeedTemplates } = require('../directions/phrases');
  * and tests. Same method surface as FirestoreStore.
  */
 class MemoryStore {
-  constructor({ graph, aliases = {}, fixtures = [], phraseRows = buildSeedTemplates() }) {
+  constructor({ graph, aliases = {}, phraseRows = buildSeedTemplates() }) {
     this.graph = graph;
     this.places = derivePlaces(graph, aliases);
-    this.fixtures = fixtures;
     this.pathStatus = [];
     this.reports = new Map();
     this.sessions = new Map();
@@ -57,14 +56,6 @@ class MemoryStore {
       result[lang] = this.templates[lang] || {};
     }
     return result;
-  }
-
-  async getRouteFixture(fromNodeId, toNodeId) {
-    for (const fixture of this.fixtures) {
-      if (fixture.from === fromNodeId && fixture.to === toNodeId) return [...fixture.path];
-      if (fixture.from === toNodeId && fixture.to === fromNodeId) return [...fixture.path].reverse();
-    }
-    return null;
   }
 
   async getSession(id) {

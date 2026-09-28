@@ -2,16 +2,18 @@
 
 // Seed Firestore with the companion's collections.
 //
-//   node scripts/seed-firestore.js [--graph] [--fixtures] [--campus-places <file>]
+//   node scripts/seed-firestore.js [--graph] [--floors] [--campus-places <file>]
 //
 // Uses Application Default Credentials, or the emulator when
 // FIRESTORE_EMULATOR_HOST is set. Safe to re-run:
 //   - phrase_templates rows are only created if missing, so a native-speaker
 //     review (text + verifiedBy) is never overwritten.
 //   - places only refresh derived fields; accessibleEntrance is never reset.
-//   --graph     also load data/wits-west-map.json into the graph collections
-//               (for an emulator or empty project; refuses if they have data).
-//   --fixtures  load PLACEHOLDER routes into dev_route_fixtures.
+//   --graph     also load public/data/wits-west-map.json into the graph
+//               collections (emulator or empty project; refuses if they have data).
+//   --floors    add floor metadata only. The Android app keeps floors in its
+//               bundled JSON, so a project seeded by the app has nodes/edges but
+//               no floors - and the routing engine needs them (metres per pixel).
 //   --campus-places <file>  import places pinned on the dev server
 //               (functions/.dev-data/campus-places.json).
 
@@ -83,15 +85,16 @@ async function seedPhraseTemplates(db) {
   console.log(`phrase_templates: ${ops.length} created, ${rows.length - ops.length} already present (left untouched)`);
 }
 
-async function seedFixtures(db, fixtures) {
-  const ops = fixtures.map((fixture) => (batch) =>
-    batch.set(db.collection(COLLECTIONS.routeFixtures).doc(`${fixture.from}__${fixture.to}`), {
-      ...fixture,
-      note: 'PLACEHOLDER route data - replace with the shared routing service'
-    })
-  );
+// Floors are only created if missing, so edited metadata is never overwritten.
+async function seedFloors(db, graph) {
+  const refs = graph.floors.map((floor) => db.collection(COLLECTIONS.graphFloors).doc(floor.floorId));
+  const snapshots = await db.getAll(...refs);
+  const ops = [];
+  graph.floors.forEach(({ floorId, ...data }, index) => {
+    if (!snapshots[index].exists) ops.push((batch) => batch.set(refs[index], data));
+  });
   await commitInChunks(db, ops);
-  console.log(`dev_route_fixtures: ${fixtures.length} (placeholder)`);
+  console.log(`floors: ${ops.length} created, ${graph.floors.length - ops.length} already present`);
 }
 
 // Import team-pinned places exported by the dev server. Every place is
@@ -117,12 +120,12 @@ async function seedCampusPlaces(db, file) {
 async function main() {
   initializeApp();
   const db = getFirestore();
-  const { graph, aliases, fixtures } = loadSeedData();
+  const { graph, aliases } = loadSeedData();
 
   if (args.has('--graph')) await seedGraph(db, graph);
+  else if (args.has('--floors')) await seedFloors(db, graph);
   await seedPlaces(db, graph, aliases);
   await seedPhraseTemplates(db);
-  if (args.has('--fixtures')) await seedFixtures(db, fixtures);
   const placesFileIndex = process.argv.indexOf('--campus-places');
   if (placesFileIndex > -1) await seedCampusPlaces(db, process.argv[placesFileIndex + 1]);
 }

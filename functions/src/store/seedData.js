@@ -15,8 +15,7 @@ function readJson(file) {
 function loadSeedData() {
   return {
     graph: readJson(GRAPH_PATH),
-    aliases: readJson(path.join(SEED_DIR, 'place-aliases.json')),
-    fixtures: readJson(path.join(SEED_DIR, 'route-fixtures.json')).routes
+    aliases: readJson(path.join(SEED_DIR, 'place-aliases.json'))
   };
 }
 

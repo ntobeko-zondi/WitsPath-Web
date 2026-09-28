@@ -70,7 +70,8 @@ async function getRoute(input, ctx) {
     fromNodeId: input.from_node_id,
     toNodeId: input.to_node_id,
     accessible: input.accessible,
-    graph
+    graph,
+    speedMultiplier: ctx.speedMultiplier
   });
   if (route.error) {
     return { ...route, instruction: "Tell the user you can't confirm a route right now. Do not describe one." };
@@ -100,9 +101,9 @@ async function getRoute(input, ctx) {
   }
 
   ctx.route = route;
-  ctx.groundedDistances.add(route.distance_m);
+  ctx.groundedRoutes.push({ distance_m: route.distance_m, estimated_seconds: route.estimated_seconds });
 
-  const result = {
+  return {
     path: route.path.map((node) => ({ node_id: node.node_id, name: node.name })),
     distance_m: route.distance_m,
     accessible: route.accessible,
@@ -111,10 +112,6 @@ async function getRoute(input, ctx) {
       'The app shows the user turn-by-turn directions from verified phrases. Do not list or translate the ' +
       'steps yourself; summarise briefly and refer to the steps shown.'
   };
-  if (route.source === 'placeholder-fixture') {
-    result.data_source = 'placeholder route data, not the shared routing engine';
-  }
-  return result;
 }
 
 async function getTravelTime(input, ctx) {
@@ -122,23 +119,27 @@ async function getTravelTime(input, ctx) {
   if (!Number.isFinite(distance) || distance <= 0) {
     return invalid('distance_m must be a positive number from get_route.');
   }
-  // Enforce "never invent a distance": only distances get_route produced in
-  // this conversation are accepted.
-  const grounded = [...ctx.groundedDistances].some((known) => Math.abs(known - distance) < 0.05);
-  if (!grounded) {
+  // Enforce "never invent a distance": only routes get_route produced in this
+  // conversation are accepted, and the time is the shared routing engine's
+  // estimate for that exact route (same formula as the Android app).
+  const route = ctx.groundedRoutes.find((known) => Math.abs(known.distance_m - distance) < 0.05);
+  if (!route) {
     return {
       error: 'ungrounded_distance',
       message: 'This distance did not come from get_route. Get a route first.'
     };
   }
+  if (!Number.isFinite(route.estimated_seconds)) {
+    return { error: 'travel_time_unavailable', message: "Tell the user you can't estimate the time right now." };
+  }
 
-  const profile = input.mobility_profile === 'ambulatory' ? 'ambulatory' : 'wheelchair';
+  // The estimate uses the walking-speed setting (the mobility profile itself
+  // doesn't change the formula, as in the Android app).
   if (input.mobility_profile) ctx.mobilityProfileUsed = true;
-  const speed = config.SPEED_MPS[profile];
-  const minutes = Math.max(1, Math.ceil(distance / speed / 60));
+  const minutes = Math.max(1, Math.ceil(route.estimated_seconds / 60));
 
-  ctx.travelTime = { minutes, basis: 'estimate', mobility_profile: profile, distance_m: distance };
-  return { minutes, basis: 'estimate', assumed_speed_m_per_s: speed, mobility_profile: profile };
+  ctx.travelTime = { minutes, basis: 'estimate', distance_m: route.distance_m };
+  return { minutes, basis: 'estimate', speed_multiplier: ctx.speedMultiplier || 1 };
 }
 
 async function checkPathStatus(input, ctx) {

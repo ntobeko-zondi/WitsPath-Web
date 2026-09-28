@@ -27,9 +27,10 @@ functions/                      server: Cloud Function "companionMessage" (all /
   src/share/                    route-card sharing, transcript export
   src/speech/                   Vulavula speech-to-text proxy
   src/store/                    Firestore store + in-memory store (dev/tests)
-  seed/                         place aliases, PLACEHOLDER route fixtures
+  seed/                         place aliases, campus list
   scripts/                      seed Firestore, client-bundle key scan, live eval
-firebase.json                   hosting + /api/** and /share/** rewrites
+routing/                        shared routing engine (Android A* + travel time, Java) + HTTP service
+firebase.json                   hosting (public/) + /api/**, /share/**, /track/** rewrites
 firestore.companion.rules       rules to MERGE into the Android app's rules
 ```
 
@@ -37,7 +38,7 @@ firestore.companion.rules       rules to MERGE into the Android app's rules
 
 ### One-time setup
 
-1. Install **Git** and **Node.js 22 or newer** (check with `node --version`).
+1. Install **Git**, **Node.js 22 or newer** (`node --version`) and a **JDK 11 or newer** (`java -version`); the routing engine is Java.
 2. Clone the repo and switch to the branch with the companion and live trips (it isn't in `main` until PR #1 is merged):
 
    ```bash
@@ -46,13 +47,21 @@ firestore.companion.rules       rules to MERGE into the Android app's rules
    git checkout feature/ai-companion
    ```
 
-3. Install the server's packages:
+3. Build the routing engine (compiles it and runs its tests):
+
+   ```powershell
+   ./routing/build.ps1
+   ```
+
+   On macOS/Linux use `./routing/build.sh`.
+
+4. Install the server's packages:
 
    ```bash
    npm --prefix functions install
    ```
 
-4. Create `functions/.secret.local` with your own keys. It is git-ignored and never deployed:
+5. Create `functions/.secret.local` with your own keys. It is git-ignored and never deployed:
 
    ```
    ANTHROPIC_API_KEY=sk-ant-...
@@ -95,7 +104,7 @@ npm --prefix functions test
 ### Things to know
 
 - **Data is per computer.** The dev server keeps chats, share links and trips in memory, and they disappear on restart. Pinned campus places are saved to `functions/.dev-data/campus-places.json` on your machine only. To share pins, send that file to teammates (same folder) until the shared Firebase project exists.
-- **Routes are placeholders.** Locally the companion can only route 5 hand-picked place pairs (`ROUTING_MODE=fixture`). Anything else answers "can't confirm a route". That's expected until the shared routing service exists.
+- **Routes come from the shared engine.** The dev server starts `routing/build/witspath-routing.jar` automatically on port 8081. If you haven't built it, routes answer "unavailable". Rebuild after changing anything in `routing/`.
 - **Testing on a phone needs HTTPS.** Browsers only allow GPS and the microphone on `localhost` or HTTPS. On a phone, `http://<laptop-IP>:5173` loads, but live trips and voice won't work. Use an HTTPS tunnel instead, e.g. `cloudflared tunnel --url http://localhost:5173` or ngrok, and open the address it prints.
 - **Port already in use?** In PowerShell: `$env:PORT=5174`, then start the server again.
 
@@ -120,7 +129,7 @@ Merge `firestore.companion.rules` into the Android project's rules. Every compan
 | Model never invents route/distance/time | Routes come only from `get_route`. `get_travel_time` rejects any distance that did not come from `get_route` in this conversation. After each reply, a numeric guard replaces it with a safe message if it contains a number not traceable to a tool result or the user. Directions are rendered from templates on the server; the model never writes them. |
 | API key server-side only | The key is read from Firebase Secrets inside the function. The browser only calls `/api/**`. `scripts/check-client-bundle.js` scans every publishable file (and the deployed site, when given a URL) and was checked against a planted fake key. |
 | Honest language support | The language menu, notices and per-reply badges show each language's tier *and* whether its directions are verified. Limited languages are flagged on every reply, and voice input is offered only for Tier 1 languages. |
-| Don't fork pathfinding | `src/routing` has no search algorithm. The modes are the shared service over HTTP (target), a labelled placeholder fixture lookup (dev), and `unavailable`, which is the production default and fails closed. |
+| Don't fork pathfinding | Routes come from `routing/`: the Android app's A* and travel-time estimator extracted into one Java module, served over HTTP. The website has no pathfinding of its own (the old JavaScript A* was deleted). With no engine configured it fails closed. |
 | WCAG AA | Keyboard operable, including Esc to close with focus returned. Labelled controls, `role=log` live region, per-message `lang` attributes, AA contrast in both themes. Every voice action has a typed/visual equivalent. |
 
 ## Test cases (brief section 11)
@@ -172,8 +181,8 @@ Live-trip follow-ups:
 
 ## Blocking follow-ups
 
-1. **Shared routing service.** Extract the Android app's Java A* into a service that implements the HTTP contract in `functions/src/routing/routingService.js`. Then set `ROUTING_MODE=http` and delete the fixture mode. Until then the companion can only route the five placeholder pairs in `functions/seed/route-fixtures.json`, and every such route is labelled as placeholder in the UI. Note: `app/routing.js`, the existing web planner, is already a JavaScript fork of A* and should move to the same service.
-2. **Confirm Firestore names.** Check the graph collection names (`nodes`/`edges`/`floors`) and `reports` against the Android app (`functions/.env`).
+1. **Android app uses the shared engine.** The website runs on `routing/`. The Android app still has its own copy of `PathFinder` until it switches to `routing/core` (steps in `routing/README.md`). Deploy the engine to Cloud Run for production (same file).
+2. **Seed floors in Firestore.** The Android app keeps floor metadata only in its bundled JSON. The engine needs it, so run `node functions/scripts/seed-firestore.js --floors` once.
 3. **Native-speaker review of `phrase_templates`.** Fill in `text` + `verifiedBy` + `verifiedAt` per language at `phrase_templates/{lang}/phrases/{key}`. Nothing is shown until `verifiedBy` is set; until then directions fall back to English and the UI says so.
 4. **Entrance accessibility data.** The graph has no `accessibleEntrance`, so `find_place` reports entrances as unverified.
 

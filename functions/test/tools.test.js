@@ -3,14 +3,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { runTool } = require('../src/tools/handlers');
-const { createRoutingService, HttpRoutingService } = require('../src/routing/routingService');
-const { NODES, makeStore } = require('./helpers');
+const { HttpRoutingService } = require('../src/routing/routingService');
+const { NODES, makeStore, makeRouting, fakeEngine } = require('./helpers');
 
-function ctxFor(store, routingMode = 'fixture') {
+function ctxFor(store, routingMode = 'http', engine = fakeEngine()) {
   return {
     store,
-    routing: createRoutingService({ mode: routingMode, store }),
-    groundedDistances: new Set()
+    routing: makeRouting(routingMode, engine),
+    groundedRoutes: [],
+    speedMultiplier: 1
   };
 }
 
@@ -46,10 +47,11 @@ test('find_place: accessible_only flags that entrance accessibility is unverifie
   assert.deepEqual(result.entrance_accessibility_unverified, [NODES.flowerHall]);
 });
 
-test('get_route: pair without route data returns an explicit error', async () => {
+test('get_route: when the engine finds no route, the error reaches the model (no guess)', async () => {
   const ctx = ctxFor(makeStore());
   const result = await runTool('get_route', { from_node_id: NODES.flowerHall, to_node_id: NODES.lawClinic, accessible: true }, ctx);
-  assert.equal(result.error, 'no_route_data');
+  assert.equal(result.error, 'no_route');
+  assert.match(result.instruction, /can't confirm a route/);
   assert.equal(result.distance_m, undefined);
   assert.equal(result.path, undefined);
   assert.equal(ctx.route, undefined);
@@ -61,21 +63,39 @@ test('get_route: unavailable routing mode fails closed', async () => {
   assert.equal(result.error, 'routing_unavailable');
 });
 
-test('get_route: fixture route uses graph edge distances and is labelled placeholder', async () => {
-  const ctx = ctxFor(makeStore());
+test('get_route: sends the live graph + walking speed to the engine and returns its route', async () => {
+  const engine = fakeEngine();
+  const store = makeStore();
+  const ctx = { ...ctxFor(store, 'http', engine), speedMultiplier: 0.7 };
   const result = await runTool('get_route', { from_node_id: NODES.commerceLibrary, to_node_id: NODES.towerOfLight, accessible: true }, ctx);
-  assert.equal(result.distance_m, 37.1); // 16.32 + 20.76 from the graph edges
+  assert.equal(result.distance_m, 37.1);
   assert.equal(result.accessible, true);
   assert.deepEqual(result.blocked_segments, []);
-  assert.match(result.data_source, /placeholder/);
   assert.equal(result.path.length, 3);
+  assert.equal(result.data_source, undefined);
+
+  const [request] = engine.requests;
+  assert.equal(request.graph.nodes.length, (await store.getGraph()).nodes.length);
+  assert.equal(request.speed_multiplier, 0.7);
+  assert.equal(request.accessible, true);
 });
 
-test('get_route: fixtures work in reverse', async () => {
+test('get_route: works in both directions', async () => {
   const ctx = ctxFor(makeStore());
   const result = await runTool('get_route', { from_node_id: NODES.towerOfLight, to_node_id: NODES.commerceLibrary, accessible: true }, ctx);
   assert.equal(result.path[0].node_id, NODES.towerOfLight);
   assert.equal(result.path[2].node_id, NODES.commerceLibrary);
+});
+
+test('get_route: an edge flagged by reports blocks a route the engine returned', async () => {
+  const store = makeStore();
+  store.graph.edges.find((edge) => edge.edgeId === 'eg_mu84r22d19').status = 'flagged';
+  const result = await runTool(
+    'get_route',
+    { from_node_id: NODES.commerceLibrary, to_node_id: NODES.towerOfLight, accessible: true },
+    ctxFor(store)
+  );
+  assert.equal(result.error, 'route_blocked');
 });
 
 test('get_route: live blocked-path report turns the route into an error', async () => {
@@ -99,14 +119,13 @@ test('get_travel_time: rejects distances that did not come from get_route', asyn
   assert.equal(result.error, 'ungrounded_distance');
 });
 
-test('get_travel_time: grounded distance gives a labelled estimate', async () => {
+test('get_travel_time: uses the engine estimate for that exact route', async () => {
   const ctx = ctxFor(makeStore());
   await runTool('get_route', { from_node_id: NODES.msbLabs, to_node_id: NODES.genmin, accessible: true }, ctx);
-  const wheelchair = await runTool('get_travel_time', { distance_m: 82, mobility_profile: 'wheelchair' }, ctx);
-  assert.equal(wheelchair.basis, 'estimate');
-  assert.equal(wheelchair.minutes, 2); // 82 m / 0.8 m/s = 102.5 s -> rounded up
-  const defaulted = await runTool('get_travel_time', { distance_m: 82 }, ctx);
-  assert.equal(defaulted.mobility_profile, 'wheelchair');
+  const estimate = await runTool('get_travel_time', { distance_m: 82, mobility_profile: 'wheelchair' }, ctx);
+  assert.equal(estimate.basis, 'estimate');
+  assert.equal(estimate.minutes, 2); // engine: 89 s -> rounded up to whole minutes
+  assert.equal(estimate.speed_multiplier, 1);
 });
 
 test('check_path_status: reports issues, and refuses unknown ids instead of saying "clear"', async () => {
@@ -132,7 +151,7 @@ test('report_issue: stores a report for a real node and rejects unknown ones', a
   assert.equal(bad.error, 'unknown_place');
 });
 
-test('HttpRoutingService: validates the shared service response against the graph', async () => {
+test('HttpRoutingService: validates the engine response against the graph', async () => {
   const store = makeStore();
   const graph = await store.getGraph();
   const respond = (body, status = 200) => async () => ({ ok: status < 400, status, json: async () => body });
@@ -140,11 +159,12 @@ test('HttpRoutingService: validates the shared service response against the grap
   const good = new HttpRoutingService({
     url: 'https://routing.example/route',
     timeoutMs: 1000,
-    fetchImpl: respond({ path: [NODES.msb, NODES.msbLabs], distance_m: 43.1, accessible: true, blocked_segments: [] })
+    fetchImpl: respond({ path: [NODES.msb, NODES.msbLabs], distance_m: 43.1, accessible: true, estimated_seconds: 61, blocked_segments: [] })
   });
   const route = await good.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.msbLabs, accessible: true, graph });
   assert.equal(route.distance_m, 43.1);
-  assert.equal(route.source, 'shared-routing-service');
+  assert.equal(route.estimated_seconds, 61);
+  assert.equal(route.source, 'shared-routing-engine');
 
   const malformed = new HttpRoutingService({ url: 'x', timeoutMs: 1000, fetchImpl: respond({ route: 'somewhere' }) });
   assert.equal((await malformed.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.msbLabs, graph })).error, 'routing_service_bad_response');
@@ -152,17 +172,33 @@ test('HttpRoutingService: validates the shared service response against the grap
   const wrongEnds = new HttpRoutingService({
     url: 'x',
     timeoutMs: 1000,
-    fetchImpl: respond({ path: [NODES.msb, NODES.msbLabs], distance_m: 43, accessible: true, blocked_segments: [] })
+    fetchImpl: respond({ path: [NODES.msb, NODES.msbLabs], distance_m: 43, accessible: true, estimated_seconds: 61, blocked_segments: [] })
   });
   assert.equal((await wrongEnds.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.genmin, graph })).error, 'routing_service_bad_response');
 
   const phantomEdge = new HttpRoutingService({
     url: 'x',
     timeoutMs: 1000,
-    fetchImpl: respond({ path: [NODES.msb, NODES.genmin], distance_m: 10, accessible: true, blocked_segments: [] })
+    fetchImpl: respond({ path: [NODES.msb, NODES.genmin], distance_m: 10, accessible: true, estimated_seconds: 40, blocked_segments: [] })
   });
   assert.equal((await phantomEdge.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.genmin, graph })).error, 'invalid_route');
 
   const down = new HttpRoutingService({ url: 'x', timeoutMs: 1000, fetchImpl: async () => { throw new Error('ECONNREFUSED'); } });
   assert.equal((await down.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.msbLabs, graph })).error, 'routing_service_unreachable');
+});
+
+test('HttpRoutingService: engine errors pass through; id-token auth asks the metadata server', async () => {
+  const graph = await makeStore().getGraph();
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    calls.push({ url: String(url), headers: options?.headers || {} });
+    if (String(url).startsWith('http://metadata.google.internal')) return { ok: true, text: async () => 'id-token-123\n' };
+    return { ok: false, status: 422, json: async () => ({ error: 'no_route', message: 'Failed to find the destination node.' }) };
+  };
+  const service = new HttpRoutingService({ url: 'https://routing-abc.a.run.app/v1/route', timeoutMs: 1000, fetchImpl, auth: 'id-token' });
+  const result = await service.getRoute({ fromNodeId: NODES.msb, toNodeId: NODES.genmin, accessible: true, graph });
+  assert.deepEqual(result, { error: 'no_route', message: 'Failed to find the destination node.' });
+  assert.match(calls[0].url, /audience=https%3A%2F%2Frouting-abc\.a\.run\.app$/);
+  assert.equal(calls[0].headers['Metadata-Flavor'], 'Google');
+  assert.equal(calls[1].headers.authorization, 'Bearer id-token-123');
 });

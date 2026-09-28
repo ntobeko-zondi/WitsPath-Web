@@ -34,7 +34,7 @@ const routing = createRoutingService({
   mode: config.ROUTING_MODE,
   url: config.ROUTING_SERVICE_URL,
   timeoutMs: config.ROUTING_TIMEOUT_MS,
-  store
+  auth: config.ROUTING_SERVICE_AUTH
 });
 
 let anthropic = null;

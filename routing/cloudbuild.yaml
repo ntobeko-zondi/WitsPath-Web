@@ -1,0 +1,8 @@
+# Builds the routing service image with routing/Dockerfile (repo root as context).
+#   gcloud builds submit --config routing/cloudbuild.yaml \
+#     --substitutions _IMAGE=africa-south1-docker.pkg.dev/PROJECT_ID/witspath/routing .
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "routing/Dockerfile", "-t", "${_IMAGE}", "."]
+images:
+  - "${_IMAGE}"

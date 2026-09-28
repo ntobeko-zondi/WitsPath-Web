@@ -9,6 +9,9 @@ node_modules/
 .secret.local
 .runtimeconfig.json
 
+# Routing engine build output (routing/build.ps1 / build.sh)
+routing/build/
+
 # Local dev data (team-pinned places while developing)
 .dev-data/
 

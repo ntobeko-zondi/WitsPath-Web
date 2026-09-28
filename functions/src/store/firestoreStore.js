@@ -82,15 +82,6 @@ class FirestoreStore {
     return result;
   }
 
-  async getRouteFixture(fromNodeId, toNodeId) {
-    const collection = this.db.collection(COLLECTIONS.routeFixtures);
-    const forward = await collection.where('from', '==', fromNodeId).where('to', '==', toNodeId).limit(1).get();
-    if (!forward.empty) return forward.docs[0].data().path;
-    const reverse = await collection.where('from', '==', toNodeId).where('to', '==', fromNodeId).limit(1).get();
-    if (!reverse.empty) return [...reverse.docs[0].data().path].reverse();
-    return null;
-  }
-
   async getSession(id) {
     const doc = await this.db.collection(COLLECTIONS.chatSessions).doc(id).get();
     return doc.exists ? toPlain(doc.data()) : null;

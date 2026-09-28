@@ -8,6 +8,8 @@ const { publicLanguageList, isKnownLanguage } = require('./language/languages');
 const { PHRASE_KEYS, isVerified } = require('./directions/phrases');
 const { publicCampuses, validatePlace, isUsable, publicPlace, isAdmin } = require('./places/campusPlaces');
 const { createTrip, recordLocation, endTrip, viewTrip } = require('./tracking/trips');
+const { runTool } = require('./tools/handlers');
+const { buildRouteCard, estimateMinutes } = require('./routing/routeCard');
 
 // Target end-to-end latency for a voice round trip (speech in -> spoken reply
 // starts). The widget measures against this; see test case 4.
@@ -64,10 +66,37 @@ function createApi(deps) {
             inputMode: body.inputMode === 'voice' ? 'voice' : 'text',
             inputLang: isKnownLanguage(body.inputLang) ? body.inputLang : null,
             preferredLang: isKnownLanguage(body.preferredLang) ? body.preferredLang : null,
+            speedMultiplier: clampSpeedMultiplier(body.speedMultiplier),
             userId: await deps.verifyUser(request.headers)
           }
         );
         return { status: 200, json: result };
+      }
+
+      // Route planner: same engine, same checks and same verified directions
+      // as the companion, without the model.
+      if (method === 'POST' && path === '/api/route') {
+        const body = request.body || {};
+        const ctx = {
+          store: deps.store,
+          routing: deps.routing,
+          log,
+          groundedRoutes: [],
+          speedMultiplier: clampSpeedMultiplier(body.speedMultiplier)
+        };
+        const result = await runTool(
+          'get_route',
+          { from_node_id: body.fromNodeId, to_node_id: body.toNodeId, accessible: body.accessible !== false },
+          ctx
+        );
+        if (result.error) {
+          const status = result.error === 'invalid_input' || result.error === 'unknown_place' ? 400 : 422;
+          return { status, json: { error: result.error, message: result.message } };
+        }
+        const card = await buildRouteCard(deps.store, ctx.route, isKnownLanguage(body.lang) ? body.lang : null, {
+          minutes: estimateMinutes(ctx.route.estimated_seconds)
+        });
+        return { status: 200, json: card };
       }
 
       if (method === 'POST' && path === '/api/companion/export') {
@@ -173,6 +202,13 @@ function createApi(deps) {
 
 function notFound() {
   return { status: 404, json: { error: 'not_found' } };
+}
+
+/** The user's walking-speed setting, bounded; 1 when missing or invalid. */
+function clampSpeedMultiplier(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 1;
+  return Math.min(config.SPEED_MULTIPLIER_MAX, Math.max(config.SPEED_MULTIPLIER_MIN, number));
 }
 
 /**
