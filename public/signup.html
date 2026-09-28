@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign up · WitsPath</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" style="color: inherit; text-decoration: none">
+          <div class="brand-mark" aria-hidden="true">W</div>
+          <div class="brand-copy">
+            <span class="brand-name">WitsPath</span>
+            <span class="brand-sub" data-i18n="nav_sign_up">Sign up</span>
+          </div>
+        </a>
+      </header>
+
+      <main class="page-layout single">
+        <section class="panel page-panel" aria-labelledby="signupTitle">
+          <h1 id="signupTitle" data-i18n="signup_title">Create your account</h1>
+          <p class="companion-small" data-i18n="signup_subtitle">
+            It takes a minute and makes your reports count towards flagging a broken path.
+          </p>
+          <p id="accountsOff" class="companion-badge companion-badge-limited" hidden>
+            Accounts are not set up on this site yet. You can keep using WitsPath without an account.
+          </p>
+
+          <form id="signupForm" class="page-form" novalidate>
+            <label class="companion-field" for="signupName">
+              <span data-i18n="field_full_name">Full name</span>
+              <input id="signupName" type="text" autocomplete="name" maxlength="80" required />
+            </label>
+            <label class="companion-field" for="signupEmail">
+              <span data-i18n="field_email">Email address</span>
+              <input id="signupEmail" type="text" inputmode="email" autocomplete="email" aria-describedby="signupEmailHelp" required />
+              <small id="signupEmailHelp" class="companion-small" data-i18n="signup_email_helper">Use your Wits email if you have one.</small>
+            </label>
+            <label class="companion-field" for="signupPassword">
+              <span data-i18n="field_password">Password</span>
+              <input id="signupPassword" type="password" autocomplete="new-password" aria-describedby="signupPasswordHelp" required />
+              <small id="signupPasswordHelp" class="companion-small" data-i18n="signup_password_helper">At least 8 characters.</small>
+            </label>
+            <label class="companion-field" for="signupConfirm">
+              <span data-i18n="field_confirm_password">Confirm password</span>
+              <input id="signupConfirm" type="password" autocomplete="new-password" required />
+            </label>
+
+            <fieldset aria-describedby="signupProfileHelp">
+              <legend>Mobility profile (optional)</legend>
+              <label class="companion-check"><input type="radio" name="mobility" value="none" checked /> <span data-i18n="mobility_none">No preference</span></label>
+              <label class="companion-check"><input type="radio" name="mobility" value="wheelchair" /> <span data-i18n="mobility_wheelchair">Wheelchair</span></label>
+              <label class="companion-check"><input type="radio" name="mobility" value="walking_aid" /> <span data-i18n="mobility_walking_aid">Walking aid</span></label>
+              <label class="companion-check"><input type="radio" name="mobility" value="low_vision" /> <span data-i18n="mobility_low_vision">Low vision</span></label>
+            </fieldset>
+            <p id="signupProfileHelp" class="companion-small">
+              <span data-i18n="signup_profile_helper">You can change this at any time in Settings.</span>
+              It's stored with your account so the Android app and website match, and is never shown to other people.
+            </p>
+
+            <button id="signupSubmit" class="companion-primary" type="submit" data-i18n="signup_button">Create account</button>
+            <p id="signupStatus" class="companion-small" role="alert"></p>
+          </form>
+
+          <p class="companion-small">
+            <span data-i18n="signup_have_account">Already have an account?</span>
+            <a href="/login.html" data-i18n="nav_log_in">Log in</a>
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/signup.js"></script>
+  </body>
+</html>

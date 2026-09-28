@@ -102,7 +102,7 @@
         text.append(name, meta);
 
         const actions = document.createElement('div');
-        actions.className = 'tracking-actions';
+        actions.className = 'page-actions';
         const edit = document.createElement('button');
         edit.type = 'button';
         edit.className = 'companion-secondary';

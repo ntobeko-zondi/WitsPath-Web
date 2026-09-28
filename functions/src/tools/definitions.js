@@ -72,7 +72,13 @@ const TOOLS = [
       type: 'object',
       properties: {
         node_or_edge_id: { type: 'string', description: 'A node id from find_place or a path node/edge id.' },
-        description: { type: 'string' }
+        description: { type: 'string' },
+        // Optional extension of the brief's contract: the Android app's issue types.
+        issue_type: {
+          type: 'string',
+          enum: ['broken_lift', 'blocked_or_broken_ramp', 'path_obstructed', 'other'],
+          description: 'Kind of problem; use "other" if unsure.'
+        }
       },
       required: ['node_or_edge_id', 'description']
     }

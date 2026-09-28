@@ -53,6 +53,20 @@
           </button>
         </div>
 
+        <section class="drawer-account" aria-labelledby="accountHeading">
+          <h3 id="accountHeading" class="eyebrow" data-i18n="nav_section_account">Account</h3>
+          <p id="accountName" class="drawer-account-name" data-i18n="nav_guest_title">Guest</p>
+          <p id="accountDetail" class="companion-small" data-i18n="nav_guest_subtitle">Sign in or create an account</p>
+          <div id="accountSignedOut" class="drawer-links">
+            <a class="secondary-button" href="/login.html" data-i18n="nav_log_in">Log in</a>
+            <a class="secondary-button" href="/signup.html" data-i18n="nav_sign_up">Sign up</a>
+          </div>
+          <div id="accountSignedIn" class="drawer-links" hidden>
+            <a class="secondary-button" href="/reports.html" data-i18n="nav_my_reports">My reports</a>
+            <button id="logOutButton" class="secondary-button" type="button" data-i18n="dialog_log_out_confirm">Log out</button>
+          </div>
+        </section>
+
         <div class="drawer-section">
           <label class="field" for="languageSelect">
             <span>Language</span>
@@ -150,6 +164,36 @@
           </div>
 
           <ol id="stepsList" class="steps-list"></ol>
+
+          <details id="reportPanel" class="report-panel" hidden>
+            <summary data-i18n="report_a_blocked_path">Report a blocked path</summary>
+            <p class="companion-small" data-i18n="report_issue_hint">
+              This segment of your route will be flagged for other users once 3 people report the same issue.
+            </p>
+            <p id="reportSignIn" class="companion-small" hidden>
+              Reports need an account so the team can follow up and so three different people can flag a path.
+              <a href="/login.html">Log in</a> or <a href="/signup.html">sign up</a>.
+            </p>
+            <form id="reportForm" class="report-form">
+              <label class="field" for="reportSegment">
+                <span>Which part of the route?</span>
+                <select id="reportSegment"></select>
+              </label>
+              <fieldset class="report-types">
+                <legend>What's wrong?</legend>
+                <label class="checkbox-row"><input type="radio" name="issueType" value="broken_lift" /> <span data-i18n="broken_lift">Broken lift</span></label>
+                <label class="checkbox-row"><input type="radio" name="issueType" value="blocked_or_broken_ramp" /> <span data-i18n="blocked_or_broken_ramp">Blocked or broken ramp</span></label>
+                <label class="checkbox-row"><input type="radio" name="issueType" value="path_obstructed" checked /> <span data-i18n="path_obstructed">Path obstructed</span></label>
+                <label class="checkbox-row"><input type="radio" name="issueType" value="other" /> <span data-i18n="other">Other</span></label>
+              </fieldset>
+              <label class="field" for="reportDescription">
+                <span>Details (optional)</span>
+                <textarea id="reportDescription" rows="2" maxlength="500"></textarea>
+              </label>
+              <button id="reportSubmit" class="primary-button" type="submit" data-i18n="report_issue_on_path">Report issue on path</button>
+              <p id="reportStatus" class="status-message" role="status" aria-live="polite"></p>
+            </form>
+          </details>
         </section>
       </main>
     </div>
@@ -270,9 +314,13 @@
       </div>
     </dialog>
 
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/account/auth.js"></script>
+    <script src="/js/account/drawer-account.js"></script>
     <script src="/js/planner/storage.js"></script>
     <script src="/js/planner/map.js"></script>
     <script src="/js/planner/navigation.js"></script>
+    <script src="/js/planner/report.js"></script>
     <script src="/js/planner/app.js"></script>
     <script src="/js/companion/speech.js"></script>
     <script src="/js/companion/companion.js"></script>

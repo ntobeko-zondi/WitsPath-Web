@@ -2,8 +2,9 @@
 
 const config = require('../config');
 const { matchPlaces } = require('../places/placeMatcher');
-const { indexGraph } = require('../routing/graphIndex');
+const { indexGraph, isEdgeBlocked } = require('../routing/graphIndex');
 const { LANGUAGES, isKnownLanguage, tierFor } = require('../language/languages');
+const { fileReport } = require('../reports/reports');
 
 // Every handler returns either a result object or { error, message }. Errors
 // are sent back to the model with is_error: true so it reports the failure
@@ -147,22 +148,35 @@ async function checkPathStatus(input, ctx) {
   if (!Array.isArray(ids) || !ids.length || ids.length > 30 || !ids.every((id) => isNonEmptyString(id))) {
     return invalid('node_ids must be 1-30 node ids.');
   }
-  const index = indexGraph(await ctx.store.getGraph());
+  const graph = await ctx.store.getGraph();
+  const index = indexGraph(graph);
   const unknown = ids.filter((id) => !index.node(id));
   if (unknown.length) {
     // "clear: true" for a place we don't know would be misleading.
     return { error: 'unknown_place', message: 'Some node ids are not on the campus map.', unknown_node_ids: unknown };
   }
 
+  const name = (id) => index.node(id)?.label?.trim() || id;
   const statuses = await ctx.store.getPathStatus(ids);
   const issues = statuses
     .filter((status) => status.blocked)
     .map((status) => ({
       node_id: status.nodeId,
-      name: index.node(status.nodeId)?.label?.trim() || status.nodeId,
+      name: name(status.nodeId),
       reason: status.reason || 'reported blocked',
       reported_at: status.reportedAt instanceof Date ? status.reportedAt.toISOString() : status.reportedAt || null
     }));
+  // Paths flagged by reports (from either app) or marked blocked.
+  const wanted = new Set(ids);
+  for (const edge of graph.edges) {
+    if ((wanted.has(edge.fromNodeId) || wanted.has(edge.toNodeId)) && isEdgeBlocked(edge)) {
+      issues.push({
+        edge_id: edge.edgeId,
+        name: `${name(edge.fromNodeId)} – ${name(edge.toNodeId)}`,
+        reason: String(edge.status).toLowerCase() === 'flagged' ? 'path flagged by several user reports' : 'path marked blocked'
+      });
+    }
+  }
   return {
     clear: issues.length === 0,
     issues,
@@ -178,20 +192,24 @@ async function reportIssue(input, ctx) {
   if (description.length < 3 || description.length > config.MAX_REPORT_DESCRIPTION_CHARS) {
     return invalid(`description must be 3-${config.MAX_REPORT_DESCRIPTION_CHARS} characters.`);
   }
-  const index = indexGraph(await ctx.store.getGraph());
-  if (!index.hasNodeOrEdge(input.node_or_edge_id)) {
+  const filed = await fileReport(ctx.store, {
+    userId: ctx.userId,
+    target: input.node_or_edge_id,
+    issueType: input.issue_type,
+    description,
+    source: 'web-companion'
+  });
+  if (filed.error === 'unknown_place') {
     return { error: 'unknown_place', message: 'Use find_place to identify the location first.' };
   }
-
-  const reportId = await ctx.store.addReport({
-    nodeOrEdgeId: input.node_or_edge_id,
-    description,
-    source: 'web-companion',
-    userId: ctx.userId || null,
-    createdAt: new Date()
-  });
+  if (filed.error) return filed;
   ctx.reportFiled = true;
-  return { report_id: reportId };
+  return {
+    report_id: filed.reportId,
+    note: filed.countsTowardFlag
+      ? 'Saved. A path is flagged for everyone once 3 people report it.'
+      : 'Saved for the WitsPath team. Signed-in reports on a path also help flag it for other users.'
+  };
 }
 
 async function declareLanguage(input, ctx) {

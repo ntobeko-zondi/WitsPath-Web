@@ -18,6 +18,7 @@ class MemoryStore {
     this.sharedRoutes = new Map();
     this.campusPlaces = new Map();
     this.trips = new Map();
+    this.users = new Map();
     this.templates = {};
     for (const row of phraseRows) {
       this.templates[row.lang] = this.templates[row.lang] || {};
@@ -48,6 +49,40 @@ class MemoryStore {
     const id = newId();
     this.reports.set(id, { ...report });
     return id;
+  }
+
+  async listReportsByUser(userId) {
+    return [...this.reports.entries()].filter(([, r]) => r.userId === userId).map(([id, r]) => ({ id, ...r }));
+  }
+
+  async listReportsForEdge(edgeId) {
+    return [...this.reports.entries()].filter(([, r]) => r.edgeId === edgeId).map(([id, r]) => ({ id, ...r }));
+  }
+
+  async getEdge(edgeId) {
+    const edge = this.graph.edges.find((item) => item.edgeId === edgeId);
+    return edge ? { ...edge } : null;
+  }
+
+  // Changes the live graph, as a Firestore edges/{id} update would.
+  async setEdgeStatus(edgeId, status) {
+    const edge = this.graph.edges.find((item) => item.edgeId === edgeId);
+    if (edge) edge.status = status;
+  }
+
+  async getUser(uid) {
+    const user = this.users.get(uid);
+    return user ? structuredClone(user) : null;
+  }
+
+  // Same semantics as Firestore set(..., { merge: true }): nested maps merge.
+  async mergeUser(uid, patch) {
+    const current = this.users.get(uid) || {};
+    this.users.set(uid, {
+      ...current,
+      ...structuredClone(patch),
+      preferences: { ...(current.preferences || {}), ...(patch.preferences || {}) }
+    });
   }
 
   async getPhraseTemplates(langs) {

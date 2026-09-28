@@ -11,6 +11,8 @@
 // functions/.env - see functions/.env.example.
 
 const { onRequest } = require('firebase-functions/v2/https');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { applyFlagging } = require('./src/reports/reports');
 const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
@@ -58,10 +60,20 @@ const api = createApi({
     const match = /^Bearer (.+)$/.exec(headers.authorization || '');
     if (!match) return null;
     try {
-      return (await getAuth().verifyIdToken(match[1])).uid;
+      const token = await getAuth().verifyIdToken(match[1]);
+      return { uid: token.uid, email: token.email || null, name: token.name || null };
     } catch {
       return null;
     }
+  }
+});
+
+// Reports from either app (the Android app writes reports/ directly):
+// flag the edge once 3 different signed-in people have reported it.
+exports.onReportCreated = onDocumentCreated(`${config.COLLECTIONS.reports}/{reportId}`, async (event) => {
+  const report = event.data?.data();
+  if (report?.edgeId && report?.userId) {
+    await applyFlagging(store, report.edgeId);
   }
 });
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/themes.css" />
     <link rel="stylesheet" href="/css/companion.css" />
     <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
-    <link rel="stylesheet" href="/css/tracking.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <div class="app-shell">
@@ -23,12 +23,12 @@
         </a>
       </header>
 
-      <main class="tracking-layout">
-        <section class="panel tracking-panel" aria-labelledby="tripTitle">
+      <main class="page-layout">
+        <section class="panel page-panel" aria-labelledby="tripTitle">
           <h1 id="tripTitle">Share my live trip</h1>
 
           <!-- Step 1: set up -->
-          <form id="tripSetup" class="tracking-form">
+          <form id="tripSetup" class="page-form">
             <p class="companion-small">
               Let someone follow you on a map until you arrive. They'll see messages like "Lindiwe is on the way to the
               Commerce Library" and "Lindiwe has arrived".
@@ -50,7 +50,7 @@
             </p>
 
             <h2>Before you start</h2>
-            <ul class="tracking-consent">
+            <ul class="page-consent">
               <li>Anyone with the link can see your approximate location on a map and your name.</li>
               <li>Only your latest position is kept. It is deleted when you arrive or stop.</li>
               <li>Sharing stops automatically when you arrive, or after 2 hours.</li>
@@ -61,9 +61,9 @@
           </form>
 
           <!-- Step 2: sharing -->
-          <div id="tripActive" class="tracking-form" hidden>
-            <p id="tripLiveIndicator" class="tracking-live-indicator">Sharing live location</p>
-            <ul id="tripSenderStatus" class="tracking-status" aria-live="polite"></ul>
+          <div id="tripActive" class="page-form" hidden>
+            <p id="tripLiveIndicator" class="page-live-indicator">Sharing live location</p>
+            <ul id="tripSenderStatus" class="page-status" aria-live="polite"></ul>
 
             <h2>Send the link</h2>
             <div class="share-link-row">
@@ -83,7 +83,7 @@
               <span>Keep my screen on while sharing</span>
             </label>
 
-            <div class="tracking-actions">
+            <div class="page-actions">
               <button id="tripArrived" class="companion-primary" type="button">I've arrived</button>
               <button id="tripStop" class="companion-secondary" type="button">Stop sharing</button>
             </div>
@@ -91,14 +91,14 @@
           </div>
 
           <!-- Step 3: finished -->
-          <div id="tripDone" class="tracking-form" hidden>
-            <p id="tripDoneMessage" class="tracking-status" role="status" tabindex="-1"></p>
+          <div id="tripDone" class="page-form" hidden>
+            <p id="tripDoneMessage" class="page-status" role="status" tabindex="-1"></p>
             <a class="companion-secondary" href="/trip.html" style="text-decoration: none; justify-self: start">Share another trip</a>
           </div>
         </section>
 
         <section class="panel" aria-label="Map">
-          <div id="tripMap" class="tracking-map"></div>
+          <div id="tripMap" class="page-map"></div>
         </section>
       </main>
     </div>

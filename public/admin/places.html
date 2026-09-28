@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/themes.css" />
     <link rel="stylesheet" href="/css/companion.css" />
     <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
-    <link rel="stylesheet" href="/css/tracking.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <div class="app-shell">
@@ -23,11 +23,11 @@
         </a>
       </header>
 
-      <main class="tracking-layout">
-        <section class="panel tracking-panel" aria-labelledby="adminTitle">
+      <main class="page-layout">
+        <section class="panel page-panel" aria-labelledby="adminTitle">
           <h1 id="adminTitle">Campus places</h1>
 
-          <form id="adminLogin" class="tracking-form">
+          <form id="adminLogin" class="page-form">
             <p class="companion-small">
               Pinned places become live-trip destinations immediately, so pin the exact door people should go to. Put a
               separate pin on each accessible entrance.
@@ -40,16 +40,16 @@
             <p id="adminLoginStatus" class="companion-small" role="status" aria-live="polite"></p>
           </form>
 
-          <div id="adminWork" class="tracking-form" hidden>
+          <div id="adminWork" class="page-form" hidden>
             <label class="companion-field" for="adminCampus">
               <span>Campus</span>
               <select id="adminCampus"></select>
             </label>
 
             <h2 id="adminListTitle">Pinned places</h2>
-            <ul id="adminPlaces" class="tracking-places" aria-labelledby="adminListTitle"></ul>
+            <ul id="adminPlaces" class="page-places" aria-labelledby="adminListTitle"></ul>
 
-            <form id="adminForm" class="tracking-form" aria-labelledby="adminFormTitle">
+            <form id="adminForm" class="page-form" aria-labelledby="adminFormTitle">
               <h2 id="adminFormTitle">Add a place</h2>
               <p class="companion-small">Click the map to drop a pin, then drag it into place. You can also type the coordinates.</p>
               <label class="companion-field" for="placeName">
@@ -73,7 +73,7 @@
                 <label class="companion-check"><input type="radio" name="placeAccessible" value="false" /> No</label>
                 <label class="companion-check"><input type="radio" name="placeAccessible" value="unknown" checked /> Not checked</label>
               </fieldset>
-              <div class="tracking-row">
+              <div class="page-row">
                 <label class="companion-field" for="placeLat">
                   <span>Latitude</span>
                   <input id="placeLat" type="number" step="0.0000001" required />
@@ -99,7 +99,7 @@
                 <span>Pinned by (your name)</span>
                 <input id="placePinnedBy" type="text" maxlength="80" required />
               </label>
-              <div class="tracking-actions">
+              <div class="page-actions">
                 <button id="placeSave" class="companion-primary" type="submit">Save place</button>
                 <button id="placeCancel" class="companion-secondary" type="button">Clear</button>
               </div>
@@ -109,7 +109,7 @@
         </section>
 
         <section class="panel" aria-label="Map">
-          <div id="adminMap" class="tracking-map"></div>
+          <div id="adminMap" class="page-map"></div>
         </section>
       </main>
     </div>

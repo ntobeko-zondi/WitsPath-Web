@@ -274,7 +274,9 @@
 
     let result;
     try {
-      const response = await fetch('/api/companion/message', {
+      // Signed-in users' reports count towards flagging a path.
+      const send = window.WitsPathAuth ? window.WitsPathAuth.authorizedFetch : fetch;
+      const response = await send('/api/companion/message', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -282,7 +284,8 @@
           text,
           inputMode: voice ? 'voice' : 'text',
           inputLang: voice?.lang || null,
-          preferredLang: selectedLang()
+          preferredLang: selectedLang(),
+          speedMultiplier: window.WitsPathSettings?.get('walkingSpeed')
         })
       });
       result = await response.json();

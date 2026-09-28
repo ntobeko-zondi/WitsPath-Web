@@ -101,6 +101,27 @@ const routing = createRoutingService({
   auth: config.ROUTING_SERVICE_AUTH
 });
 
+// Real Firebase sign-ins work locally too: verifying an ID token only needs
+// the project id (Google's signing keys are public), no service account.
+// Set FIREBASE_PROJECT_ID in functions/.env (e.g. wavelets-wits-nav). Users'
+// profiles and preferences are kept in memory on the dev server.
+let devAuth = null;
+async function verifyDevUser(headers) {
+  const match = /^Bearer (.+)$/.exec(headers.authorization || '');
+  if (!process.env.FIREBASE_PROJECT_ID || !match) return null;
+  if (!devAuth) {
+    const { initializeApp } = require('firebase-admin/app');
+    const { getAuth } = require('firebase-admin/auth');
+    devAuth = getAuth(initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID }, 'dev-auth'));
+  }
+  try {
+    const token = await devAuth.verifyIdToken(match[1]);
+    return { uid: token.uid, email: token.email || null, name: token.name || null };
+  } catch {
+    return null;
+  }
+}
+
 let anthropic = null;
 const api = createApi({
   store,
@@ -115,7 +136,7 @@ const api = createApi({
   },
   getVulavulaKey: () => process.env.VULAVULA_API_KEY || '',
   getAdminToken: () => process.env.ADMIN_API_TOKEN || '',
-  verifyUser: async () => null
+  verifyUser: verifyDevUser
 });
 
 function readBody(req) {

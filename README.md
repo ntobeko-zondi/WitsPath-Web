@@ -145,6 +145,29 @@ Merge `firestore.companion.rules` into the Android project's rules. Every compan
 | 7 | Share flow | Deterministic + verified in the browser (create, view, revoke). |
 | 8 | Key not in bundle | `npm run check:bundle`: passing locally. Re-run against the deployed URL. |
 
+## Accounts and reports (shared with the Android app)
+
+The website signs in with the same Firebase accounts as the Android app (project `wavelets-wits-nav`) and reads and writes the same documents:
+
+| Collection | Shape (same as Android) | Website |
+|---|---|---|
+| `users/{uid}` | `{ displayName, email, preferences: { pref_* } }` | Sign-up saves it (`PUT /api/me/profile`). Settings sync to `preferences`. |
+| `reports/{id}` | `{ userId, edgeId, issueType, timestamp }` (+ `nodeId`, `description`, `source`) | "Report a blocked path" on a route, the companion's `report_issue`, and `/reports.html` (My reports) |
+| `edges/{id}.status` | `ok`, `flagged` or `blocked` | Set to `flagged` when 3 different signed-in people report the same path within 30 days |
+
+About the flagging rule:
+- The Android app promised it ("flagged once 3 people report") but never implemented it.
+- It now runs on the server for both apps: a Firestore trigger (`onReportCreated`) also covers reports the app writes directly.
+- Flagged paths are avoided by the routing engine.
+- Only the team can clear a flag: set the edge's `status` back to `ok` in Firestore.
+
+Pages: `/login.html`, `/signup.html` and `/reports.html`, plus an account section in the main page's drawer.
+
+Setup:
+1. In the Firebase console, add a **Web app** to the project.
+2. Paste its config into `public/js/firebase-config.js`. These values are public by design. Leave it `null` and accounts show as "not set up yet".
+3. For local sign-in, set `FIREBASE_PROJECT_ID=wavelets-wits-nav` in `functions/.env`. The dev server can then verify real sign-ins. It needs no credentials, but keeps profiles in memory.
+
 ## Live trips (all Wits campuses)
 
 Someone heading to a campus place can share a live link. People following it see a map and status lines such as "Lindiwe is on the way to …", "Lindiwe is near …", "Lindiwe has arrived at …" and "Last update 3 minutes ago".

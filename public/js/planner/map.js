@@ -21,6 +21,7 @@ function renderRoute(card) {
     window.appElements.guidanceText.textContent = 'Choose your start and destination to begin.';
     window.appElements.stepsList.replaceChildren();
     window.WitsPathNavigation?.setRoute(null);
+    window.WitsPathReport?.setRoute(null);
     return;
   }
 
@@ -52,6 +53,7 @@ function renderRoute(card) {
     })
   );
   window.WitsPathNavigation?.setRoute(card);
+  window.WitsPathReport?.setRoute(card);
 }
 
 /** "You are here" marker for step-by-step navigation; null removes it. */

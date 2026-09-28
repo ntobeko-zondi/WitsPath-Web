@@ -71,6 +71,8 @@ module.exports = {
     pathStatus: 'path_status',
     // Shared with the Android app's MyReportsActivity if the name matches.
     reports: process.env.REPORTS_COLLECTION || 'reports',
+    // Android: users/{uid} { displayName, email, preferences }.
+    users: 'users',
     sharedRoutes: 'shared_routes',
     chatSessions: 'chat_sessions',
     phraseTemplates: 'phrase_templates',

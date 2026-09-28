@@ -1,7 +1,8 @@
-/* Live trip pages (sender, viewer) and the campus places admin page.
-   Uses the site's colour tokens (css/styles.css) and companion components. */
+/* Shared layout and form styles for the standalone pages: live trips
+   (sender, viewer), account (sign in, sign up, my reports, settings) and the
+   campus places admin. Colours come from themes.css. */
 
-.tracking-layout {
+.page-layout {
   max-width: 1080px;
   margin: 0 auto;
   padding: 1.25rem;
@@ -11,39 +12,39 @@
   align-items: start;
 }
 
-.tracking-layout.single {
+.page-layout.single {
   grid-template-columns: minmax(0, 560px);
   justify-content: center;
 }
 
-.tracking-panel {
+.page-panel {
   display: grid;
   gap: 0.9rem;
 }
 
-.tracking-panel h1,
-.tracking-panel h2 {
+.page-panel h1,
+.page-panel h2 {
   margin: 0;
 }
 
-.tracking-panel h1 {
+.page-panel h1 {
   font-size: 1.4rem;
 }
 
-.tracking-panel h2 {
+.page-panel h2 {
   font-size: 1.1rem;
 }
 
-.tracking-form {
+.page-form {
   display: grid;
   gap: 0.8rem;
 }
 
-.tracking-form input[type="text"],
-.tracking-form input[type="password"],
-.tracking-form input[type="number"],
-.tracking-form textarea,
-.tracking-form select {
+.page-form input[type="text"],
+.page-form input[type="password"],
+.page-form input[type="number"],
+.page-form textarea,
+.page-form select {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.6rem 0.8rem;
@@ -54,7 +55,7 @@
   font: inherit;
 }
 
-.tracking-form fieldset {
+.page-form fieldset {
   margin: 0;
   padding: 0.6rem 0.8rem;
   border: 1px solid var(--line);
@@ -64,18 +65,18 @@
   gap: 0.8rem;
 }
 
-.tracking-form legend {
+.page-form legend {
   font-weight: 600;
   padding: 0 0.3rem;
 }
 
-.tracking-row {
+.page-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
 }
 
-.tracking-consent {
+.page-consent {
   margin: 0;
   padding-left: 1.2rem;
   display: grid;
@@ -84,7 +85,7 @@
   line-height: 1.45;
 }
 
-.tracking-map {
+.page-map {
   width: 100%;
   height: min(70vh, 640px);
   min-height: 320px;
@@ -94,7 +95,7 @@
   background: var(--panel);
 }
 
-.tracking-live-indicator {
+.page-live-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -107,7 +108,7 @@
   justify-self: start;
 }
 
-.tracking-live-indicator::before {
+.page-live-indicator::before {
   content: "";
   width: 0.65rem;
   height: 0.65rem;
@@ -115,7 +116,7 @@
   background: currentColor;
 }
 
-.tracking-status {
+.page-status {
   list-style: none;
   margin: 0;
   padding: 0.8rem 0.9rem;
@@ -127,18 +128,18 @@
   line-height: 1.5;
 }
 
-.tracking-status li:first-child {
+.page-status li:first-child {
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.tracking-actions {
+.page-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.tracking-places {
+.page-places {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -148,7 +149,7 @@
   overflow-y: auto;
 }
 
-.tracking-places li {
+.page-places li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -159,12 +160,23 @@
   background: var(--panel);
 }
 
-.tracking-places .companion-small {
+.page-places .companion-small {
   display: block;
 }
 
 [hidden] {
   display: none !important;
+}
+
+.page-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  text-decoration: none;
+}
+
+.page-panel a {
+  color: var(--route);
 }
 
 .leaflet-container {
@@ -177,12 +189,12 @@
 }
 
 @media (max-width: 860px) {
-  .tracking-layout {
+  .page-layout {
     grid-template-columns: 1fr;
     padding: 0.9rem;
   }
 
-  .tracking-map {
+  .page-map {
     height: 55vh;
   }
 }

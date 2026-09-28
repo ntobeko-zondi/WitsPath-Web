@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/themes.css" />
     <link rel="stylesheet" href="/css/companion.css" />
     <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
-    <link rel="stylesheet" href="/css/tracking.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <div class="app-shell">
@@ -23,12 +23,12 @@
         </a>
       </header>
 
-      <main class="tracking-layout">
-        <section class="panel tracking-panel" aria-labelledby="trackTitle">
+      <main class="page-layout">
+        <section class="panel page-panel" aria-labelledby="trackTitle">
           <h1 id="trackTitle">Loading live trip…</h1>
-          <p id="trackLive" class="tracking-live-indicator" hidden>Live</p>
+          <p id="trackLive" class="page-live-indicator" hidden>Live</p>
           <!-- Status lines come from the server's verified phrase templates. -->
-          <ul id="trackStatus" class="tracking-status" aria-live="polite"></ul>
+          <ul id="trackStatus" class="page-status" aria-live="polite"></ul>
           <p class="companion-small">
             Shared with the sender's consent. Positions are approximate, and distances are in a straight line, not along
             the walking route. This page updates automatically.
@@ -37,7 +37,7 @@
         </section>
 
         <section class="panel" aria-label="Map">
-          <div id="trackMap" class="tracking-map"></div>
+          <div id="trackMap" class="page-map"></div>
         </section>
       </main>
     </div>
