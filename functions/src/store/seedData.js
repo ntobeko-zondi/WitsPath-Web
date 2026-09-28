@@ -5,7 +5,7 @@ const path = require('path');
 
 // Seed inputs shared by the in-memory dev store and the Firestore seed script.
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const GRAPH_PATH = path.join(REPO_ROOT, 'data', 'wits-west-map.json');
+const GRAPH_PATH = path.join(REPO_ROOT, 'public', 'data', 'wits-west-map.json');
 const SEED_DIR = path.resolve(__dirname, '..', '..', 'seed');
 
 function readJson(file) {

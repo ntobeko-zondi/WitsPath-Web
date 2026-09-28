@@ -5,14 +5,20 @@ Website for WitsPath, accessible indoor navigation for Wits University, with an 
 ## Layout
 
 ```
-index.html, app/, css/, data/   existing route-planner site
-companion/                      companion widget (browser): chat UI, voice layer, share page script
-share.html                      public /share/{id} route-card page
-trip.html, track.html           live trip: sender page, and viewer page (/track/{id})
-tracking/                       live trip scripts, styles, map adapter (OpenStreetMap now, Google later)
-admin/                          campus places admin page (/admin/)
-vendor/leaflet-1.9.4/           map library (BSD-2 licence)
-functions/                      Cloud Function "companionMessage" (all /api/** routes)
+public/                         everything the browser loads (Firebase Hosting root)
+  index.html                    route planner + AI companion
+  share.html                    /share/{id} route card
+  trip.html, track.html         live trip: sender page, viewer page (/track/{id})
+  admin/places.html             campus places admin (/admin)
+  css/                          all stylesheets
+  js/planner/                   route planner scripts
+  js/companion/                 companion chat, voice layer, share page
+  js/tracking/                  live trips + map adapter (OpenStreetMap now, Google later)
+  js/admin/                     admin page script
+  assets/images/                campus map and other images
+  data/                         campus graph (same data as the Android app)
+  vendor/leaflet-1.9.4/         map library (BSD-2 licence)
+functions/                      server: Cloud Function "companionMessage" (all /api/** routes)
   src/companion/                tool-use loop, system prompt, numeric grounding guard
   src/tools/                    tool contracts + handlers (find_place, get_route, ...)
   src/routing/                  routing interface - NO pathfinding here (see below)

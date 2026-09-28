@@ -27,12 +27,12 @@ const { createRoutingService } = require('./src/routing/routingService');
 const { CompanionError } = require('./src/companion/companion');
 
 const PORT = Number(process.env.PORT || 5173);
-const SITE_ROOT = path.resolve(__dirname, '..');
-// Only these paths are public - mirrors the hosting config, so functions/,
-// .env and scripts are never served.
-const PUBLIC_FILES = new Set(['/index.html', '/share.html', '/trip.html', '/track.html']);
-const PUBLIC_DIRS = ['/app/', '/css/', '/data/', '/companion/', '/tracking/', '/vendor/', '/admin/'];
+// Everything the browser may load lives in public/ (same as Firebase Hosting),
+// so server code, secrets and scripts can never be served.
+const SITE_ROOT = path.resolve(__dirname, '..', 'public');
 const MIME = {
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -119,9 +119,8 @@ function serveStatic(urlPath, res) {
   if (/^\/track\/[^/]+$/.test(filePath)) filePath = '/track.html';
   if (filePath === '/admin' || filePath === '/admin/') filePath = '/admin/places.html';
 
-  const allowed = PUBLIC_FILES.has(filePath) || PUBLIC_DIRS.some((dir) => filePath.startsWith(dir));
   const absolute = path.resolve(SITE_ROOT, `.${filePath}`);
-  if (!allowed || !absolute.startsWith(SITE_ROOT + path.sep) || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+  if (!absolute.startsWith(SITE_ROOT + path.sep) || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
     res.writeHead(404, { 'content-type': 'text/plain' });
     res.end('Not found');
     return;

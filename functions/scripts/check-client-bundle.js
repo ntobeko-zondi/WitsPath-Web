@@ -12,8 +12,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const SITE_ROOT = path.resolve(__dirname, '..', '..');
-const hosting = JSON.parse(fs.readFileSync(path.join(SITE_ROOT, 'firebase.json'), 'utf8')).hosting;
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const hosting = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'firebase.json'), 'utf8')).hosting;
+// Firebase Hosting publishes this folder (public/).
+const SITE_ROOT = path.join(REPO_ROOT, hosting.public);
 
 // Load local secrets (if any) so the actual key values are searched for too.
 for (const file of ['.secret.local', '.env']) {
@@ -22,7 +24,9 @@ for (const file of ['.secret.local', '.env']) {
 }
 
 const PATTERNS = [/sk-ant-[A-Za-z0-9_-]{8,}/, /ANTHROPIC_API_KEY/, /VULAVULA_API_KEY/, /X-CLIENT-TOKEN/i, /x-api-key/i];
-const SECRET_VALUES = [process.env.ANTHROPIC_API_KEY, process.env.VULAVULA_API_KEY].filter((value) => value && value.length > 8);
+const SECRET_VALUES = [process.env.ANTHROPIC_API_KEY, process.env.VULAVULA_API_KEY, process.env.ADMIN_API_TOKEN].filter(
+  (value) => value && value.length > 8
+);
 
 function globToRegExp(glob) {
   const escaped = glob.replace(/[.+^${}()|[\]\\]/g, '\\$&');

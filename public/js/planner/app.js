@@ -132,7 +132,7 @@ function requestRoute() {
 }
 
 function loadGraph() {
-  fetch('data/wits-west-map.json')
+  fetch('/data/wits-west-map.json')
     .then((response) => {
       if (!response.ok) {
         throw new Error('Could not load campus route data.');
