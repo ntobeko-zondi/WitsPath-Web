@@ -20,6 +20,7 @@ function renderRoute(card) {
   if (!card || !card.points || card.points.length < 2) {
     window.appElements.guidanceText.textContent = 'Choose your start and destination to begin.';
     window.appElements.stepsList.replaceChildren();
+    window.WitsPathNavigation?.setRoute(null);
     return;
   }
 
@@ -50,6 +51,22 @@ function renderRoute(card) {
       return li;
     })
   );
+  window.WitsPathNavigation?.setRoute(card);
+}
+
+/** "You are here" marker for step-by-step navigation; null removes it. */
+function setCurrentMarker(point) {
+  window.appElements.routeOverlay.querySelector('.route-current')?.remove();
+  if (point) window.appElements.routeOverlay.appendChild(svgCircle(point, 'route-current'));
+}
+
+/** Zoom in (at least 2x) and pan so the point is in the middle of the map. */
+function centerMapOn(point) {
+  const viewport = window.appElements.mapViewport;
+  window.appState.mapScale = Math.max(window.appState.mapScale, 2);
+  window.appState.mapX = viewport.clientWidth / 2 - point.x * window.appState.mapScale;
+  window.appState.mapY = viewport.clientHeight / 2 - point.y * window.appState.mapScale;
+  applyMapTransform();
 }
 
 function resetMapView() {

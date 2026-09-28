@@ -28,7 +28,13 @@ async function buildRouteCard(store, route, lang, travelTime) {
     toNodeId: route.path[route.path.length - 1].node_id,
     distanceM: route.distance_m,
     accessible: route.accessible,
-    steps: directions.steps.map(({ phraseKey, params, text, lang: stepLang }) => ({ phraseKey, params, text, lang: stepLang })),
+    steps: directions.steps.map(({ phraseKey, params, text, lang: stepLang, pointIndex }) => ({
+      phraseKey,
+      params,
+      text,
+      lang: stepLang,
+      pointIndex
+    })),
     // Map-pixel positions for drawing the route on the campus map.
     points: route.path.map(({ node_id: nodeId, name, x, y }) => ({ nodeId, name, x, y })),
     edgeIds: route.segments.map((segment) => segment.edge_id),

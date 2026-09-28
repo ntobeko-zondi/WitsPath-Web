@@ -3,7 +3,7 @@
    contrast (4.5:1 or better) in both themes. */
 
 :root {
-  --companion-accent: var(--wits-blue-700); /* #195394 on white: 8.3:1 */
+  --companion-accent: var(--wits-blue-700); /* Wits blue #003b7e on white: 11:1 */
   --companion-warn-bg: #fff4dc;
   --companion-warn-ink: #6b4700; /* 7.9:1 on warn-bg */
   --companion-good-bg: #e3f5ec;

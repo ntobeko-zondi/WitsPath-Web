@@ -132,9 +132,24 @@
         </section>
 
         <section class="panel guidance-panel" aria-labelledby="guidanceTitle">
-          <h2 id="guidanceTitle">Navigation</h2>
+          <div class="guidance-header">
+            <h2 id="guidanceTitle">Navigation</h2>
+            <button id="startNavigation" class="primary-button" type="button" hidden>Start step-by-step</button>
+          </div>
           <p id="guidanceText" class="guidance-text">Choose your start and destination to begin.</p>
-          <ol id="stepsList" class="steps-list" aria-live="polite"></ol>
+
+          <div id="navigationMode" class="navigation-mode" hidden>
+            <p class="eyebrow">Step <span id="navStepNumber">1</span> of <span id="navStepCount">1</span></p>
+            <p id="navInstruction" class="nav-instruction" aria-live="polite"></p>
+            <progress id="navProgress" max="100" value="0" aria-label="Route progress"></progress>
+            <div class="route-actions">
+              <button id="navPrev" class="secondary-button" type="button">Previous step</button>
+              <button id="navNext" class="primary-button" type="button">Next step</button>
+            </div>
+            <button id="navExit" class="secondary-button nav-exit" type="button">Exit step-by-step</button>
+          </div>
+
+          <ol id="stepsList" class="steps-list"></ol>
         </section>
       </main>
     </div>
@@ -257,6 +272,7 @@
 
     <script src="/js/planner/storage.js"></script>
     <script src="/js/planner/map.js"></script>
+    <script src="/js/planner/navigation.js"></script>
     <script src="/js/planner/app.js"></script>
     <script src="/js/companion/speech.js"></script>
     <script src="/js/companion/companion.js"></script>

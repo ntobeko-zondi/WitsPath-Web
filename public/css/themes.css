@@ -1,40 +1,61 @@
+/* WitsPath design tokens - the single place colours are defined.
+   Palette from the Android app's redesign (res/values/colors.xml): white
+   surfaces, Wits dark-blue text and Wits blue actions. Text colours are
+   chosen for WCAG AA contrast (4.5:1+) on their surfaces. */
+
 :root {
-  --wits-blue-900: #0a2f5f;
-  --wits-blue-800: #123d73;
-  --wits-blue-700: #195394;
-  --wits-blue-600: #1f67b8;
+  --wits-blue-900: #002c5f; /* Android colorInkText */
+  --wits-blue-800: #00336e;
+  --wits-blue-700: #003b7e; /* Android colorRoute (Wits Blue) */
+  --wits-blue-600: #1f5aa6;
   --wits-blue-500: #2c7be6;
-  --wits-blue-100: #eaf2ff;
-  --white: #ffffff;
-  --ink: #182130;
-  --ink-muted: #4d5d73;
-  --panel: #f5f8fc;
-  --panel-strong: #eef4ff;
-  --line: #d9e3f0;
-  --success: #1a8f5a;
-  --route: #1b7aee;
-  --route-soft: rgba(27, 122, 238, 0.18);
-  --shadow: 0 18px 46px rgba(17, 41, 72, 0.12);
-  --danger: #b33131;
-  --warning: #d08500;
-  --body-bg: #edf3fb;
-  --focus-ring: 0 0 0 3px rgba(28, 120, 234, 0.28);
+  --wits-blue-100: #ebf2fe;
+  --white: #ffffff; /* Android colorPlate: cards and surfaces */
+  --ink: #002c5f; /* 13.8:1 on white */
+  --ink-muted: #4b5f80; /* Android #556B8D darkened slightly: 6.3:1 on white */
+  --panel: #f2f5f8; /* Android colorLangSystemSurface */
+  --panel-strong: #ebf2fe;
+  --line: #c4ced9; /* Android colorRuleStrong */
+  --success: #00796b; /* Android colorAccessible #00897B darkened to 5.3:1 */
+  --route: #003b7e;
+  --route-soft: rgba(0, 59, 126, 0.16);
+  --shadow: 0 12px 32px rgba(0, 44, 95, 0.1);
+  --danger: #c62828; /* Android colorFlag, 5.6:1 */
+  --warning: #b35c00;
+  --body-bg: #e8edf2; /* Android colorInk */
+  --focus-ring: 0 0 0 3px rgba(0, 59, 126, 0.35);
   --button-text: #ffffff;
-  --topbar-bg: linear-gradient(135deg, var(--wits-blue-900), var(--wits-blue-700));
+  --topbar-bg: linear-gradient(135deg, #002c5f, #003b7e);
+
+  /* Language accent (Android colorLang*). Decorative only - never used for
+     text, because several (e.g. Setswana green) are too light to read. */
+  --lang-accent: #556b8d;
   color-scheme: light;
 }
 
+body[data-ui-lang="en"] { --lang-accent: #5b93f0; }
+body[data-ui-lang="zu"] { --lang-accent: #a47bf0; }
+body[data-ui-lang="st"] { --lang-accent: #ec6ea9; }
+body[data-ui-lang="tn"] { --lang-accent: #a3ce4e; }
+body[data-ui-lang="xh"] { --lang-accent: #3eb8e0; }
+body[data-ui-lang="af"] { --lang-accent: #63c55f; }
+
+/* High contrast: the Android app's night palette. */
 body[data-contrast="true"] {
-  --body-bg: #0f172a;
-  --panel: #111c2e;
-  --panel-strong: #13243c;
-  --white: #0b1220;
-  --ink: #f3f7ff;
-  --ink-muted: #d4dff7;
-  --line: #42577d;
-  --route-soft: rgba(116, 180, 255, 0.28);
-  --shadow: 0 22px 48px rgba(0, 0, 0, 0.38);
-  --topbar-bg: linear-gradient(135deg, #0d233f, #133d75);
+  --body-bg: #121212;
+  --panel: #1e1e1e;
+  --panel-strong: #2c2c2c;
+  --white: #1e1e1e;
+  --ink: #ffffff;
+  --ink-muted: #cfd8dc;
+  --line: #607d8b;
+  --route: #64b5f6;
+  --route-soft: rgba(100, 181, 246, 0.28);
+  --success: #4db6ac;
+  --danger: #ef9a9a;
+  --wits-blue-700: #1e5aa8;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --topbar-bg: linear-gradient(135deg, #0b1f3a, #12366b);
   --button-text: #ffffff;
   color-scheme: dark;
 }
