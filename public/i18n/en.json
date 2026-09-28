@@ -166,8 +166,6 @@
   "settings_section_routing": "Accessibility and routing",
   "settings_show_flagged_subtitle": "Mark reported obstacles on the floor plan",
   "settings_show_flagged_title": "Show flagged paths",
-  "settings_smart_reminders_subtitle": "Notify me when it's time to leave for class",
-  "settings_smart_reminders_title": "Smart reminders",
   "settings_step_free_subtitle": "Never suggest stairs, even if the route is longer",
   "settings_step_free_title": "Step-free routes only",
   "settings_sync_subtitle": "Keep preferences on every device you sign in on",

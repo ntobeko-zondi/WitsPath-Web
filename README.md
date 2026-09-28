@@ -185,7 +185,8 @@ Setup:
 ## Settings, saved places and translations
 
 - **Settings** (`/settings.html`) use the Android `Prefs` keys. When signed in they sync to `users/{uid}.preferences`, so they follow you between the website and the app. Covered: text size, high contrast, step-free routes, walking/wheeling speed (the routing engine's speed multiplier), mobility profile, interface language and sync. Android's "prefer lifts" and "avoid steep ramps" aren't shown because the routing engine doesn't use them yet.
-- **Saved places, home base and the next-class reminder** (`/saved.html`) stay on the device, as on Android. The reminder uses the Android rule: leave time = class start − travel time − 5 minutes. Browsers can only remind you while a WitsPath tab is open.
+- **Saved places, home base and the next-class reminder** (`/saved.html`) stay on the device. The reminder uses the rule the Android app had: leave time = class start − travel time − 5 minutes. Browsers can only remind you while a WitsPath tab is open.
+- **Website-only for now:** the latest Android app (28 Sep 2026) removed its travel-time estimator, walking-speed setting, saved places and reminders. The website keeps them. The travel-time code is in the shared engine (`routing/core`) for the app to take back. `pref_walking_speed_multiplier` still syncs to the account, and the app ignores it.
 - **Interface translations** in `public/i18n/` are imported from the Android app's `strings.xml` with this command:
 
   ```bash

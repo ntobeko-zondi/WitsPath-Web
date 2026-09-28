@@ -65,7 +65,7 @@ Differences from the current Android code, all intentional fixes:
 |---|---|
 | Nodes and `PathFinder.errorMessage` are static globals | Owned by a `CampusGraph` / `PathFinder` instance, safe for concurrent requests |
 | `Edge` has no id, so reports use `"placeholder_edge_id"` | `Edge.edgeId` is kept from the data |
-| `TravelTimeEstimator` uses `edge.uphillFromNodeId`, which `Edge` doesn't have (doesn't compile) | Field added, read from `uphillFrom` in the graph JSON |
+| Travel time: an earlier version's `TravelTimeEstimator` used `edge.uphillFromNodeId`, which `Edge` didn't have (it didn't compile). The latest app (28 Sep 2026) removed the estimator, the uphill data and the walking-speed setting | The estimator lives here, with the uphill field. It is the website's source for travel-time estimates, and the app can adopt it from here |
 | `accessibilityCost` ignored | `accessibilityCost >= 999` is impassable in accessible mode, as the graph schema note says |
 | Nodes loaded from Firestore keep pixel coordinates (no floor conversion) | A node on an unknown floor is rejected, so pixels are never mistaken for metres |
 
