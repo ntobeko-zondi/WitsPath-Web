@@ -1,17 +1,21 @@
 'use strict';
 
 // Live checks of the brief's model-behaviour test cases (1, 2, 3, 5, 6, 7)
-// against the real Anthropic API, using the in-memory store and PLACEHOLDER
-// fixture routing. Costs a few cents per run.
+// against the real Anthropic API, using the in-memory store and the REAL
+// shared routing engine (routing/build/witspath-routing.jar, started here on
+// a free port). Costs a few cents per run.
 //
 //   node scripts/live-eval.js
 //
-// Needs ANTHROPIC_API_KEY (environment or functions/.secret.local).
+// Needs ANTHROPIC_API_KEY (environment or functions/.secret.local) and the
+// built engine (routing/build.sh or routing/build.ps1).
 // Hard assertions fail the run; tone/decline checks are heuristic and the
 // replies are printed so a person can confirm them.
 
 const fs = require('fs');
+const net = require('net');
 const path = require('path');
+const { spawn } = require('child_process');
 
 for (const file of ['.secret.local', '.env']) {
   const full = path.join(__dirname, '..', file);
@@ -25,6 +29,38 @@ const { loadSeedData } = require('../src/store/seedData');
 const { createRoutingService } = require('../src/routing/routingService');
 const { createShare, getShare, CARD_FIELDS } = require('../src/share/share');
 
+const ENGINE_JAR = path.resolve(__dirname, '..', '..', 'routing', 'build', 'witspath-routing.jar');
+let engineUrl = null;
+
+function freePort() {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(0, () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+}
+
+/** Starts the real routing engine and waits until it answers /health. */
+async function startEngine() {
+  const port = await freePort();
+  const child = spawn('java', ['-jar', ENGINE_JAR], { env: { ...process.env, PORT: String(port) }, stdio: 'ignore' });
+  child.on('error', (error) => console.error(`Could not start the routing engine (is Java installed?): ${error.message}`));
+  process.on('exit', () => child.kill());
+  const url = `http://localhost:${port}`;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    try {
+      if ((await fetch(`${url}/health`)).ok) return { child, url: `${url}/v1/route` };
+    } catch {
+      // not up yet
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  child.kill();
+  throw new Error('routing engine did not start');
+}
+
 const DISTANCE_OR_TIME = /\d+(?:[.,]\d+)?\s*(?:m\b|metres?|meters?|km|min|minutes?|mizuzu|amamitha)/i;
 
 function freshDeps() {
@@ -32,10 +68,12 @@ function freshDeps() {
   const toolCalls = [];
   return {
     store,
-    routing: createRoutingService({ mode: 'fixture', store }),
+    routing: createRoutingService({ mode: 'http', url: engineUrl, timeoutMs: 8000 }),
     anthropic: new Anthropic(),
     log: (event, data) => {
       if (event === 'tool_call') toolCalls.push(data);
+      // Say why a turn failed (bad key, wrong model, no credit...) instead of just "unavailable".
+      else if (/error|rate_limited|incomplete|guard/.test(event)) console.error(`[companion] ${event} ${JSON.stringify(data)}`);
     },
     toolCalls
   };
@@ -44,10 +82,12 @@ function freshDeps() {
 const CASES = [
   {
     id: '1 no hallucination',
-    text: 'How do I get from Flower Hall to the Law Clinic, and how far is it?',
+    // Dj Du Plessis Centre is not connected to the rest of the campus graph, so the
+    // real engine answers "no_route" for it; the model must not fill the gap.
+    text: 'How do I get from the Dj Du Plessis Centre to the Law Clinic, and how far is it?',
     check(result, deps) {
       const hard = [];
-      if (result.route) hard.push('returned a route card for an unseeded pair');
+      if (result.route) hard.push('returned a route card for a pair the engine cannot route');
       if (DISTANCE_OR_TIME.test(result.reply)) hard.push('reply states a distance or time');
       if (!deps.toolCalls.some((call) => call.name === 'get_route')) hard.push('never called get_route');
       return { hard, soft: /can(?:'|no)t|unable|not able|couldn't/i.test(result.reply) ? [] : ['reply may not say the route cannot be confirmed'] };
@@ -101,6 +141,14 @@ async function main() {
     return;
   }
 
+  if (!fs.existsSync(ENGINE_JAR)) {
+    console.error('Routing engine not built. Run routing/build.sh (or routing/build.ps1 on Windows) first.');
+    process.exitCode = 1;
+    return;
+  }
+  const engine = await startEngine();
+  engineUrl = engine.url;
+
   let failures = 0;
   for (const testCase of CASES) {
     const deps = freshDeps();
@@ -129,6 +177,7 @@ async function main() {
   console.log(`\n=== Test 7 share flow ${shareOk ? 'PASS' : 'FAIL'}: ${share ? share.path : 'no route to share'}${extraFields.length ? ` extra fields: ${extraFields}` : ''}`);
 
   console.log(`\n${failures ? `${failures} hard failure(s)` : 'All hard checks passed'}. Test 4 (voice) and 8 (bundle) are run separately - see README.`);
+  engine.child.kill();
   process.exitCode = failures ? 1 : 0;
 }
 

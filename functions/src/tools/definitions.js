@@ -42,11 +42,14 @@ const TOOLS = [
     name: 'get_travel_time',
     description:
       'Estimate travel time for a distance returned by get_route. Only accepts distances that came from ' +
-      'get_route. The result is always an estimate and must be described as one.',
+      'get_route. The result is always an estimate and must be described as one. The estimate uses the user\'s ' +
+      'saved mobility profile; the result names it in profile_used.',
     input_schema: {
       type: 'object',
       properties: {
         distance_m: { type: 'number' },
+        // Informational: the estimate always uses the profile in the user's settings.
+        // The result's profile_used says which one that was.
         mobility_profile: { type: 'string', enum: ['wheelchair', 'ambulatory'] }
       },
       required: ['distance_m']

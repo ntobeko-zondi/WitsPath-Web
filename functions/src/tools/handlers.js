@@ -20,6 +20,9 @@ const TIER_GUIDANCE = {
     'in their language.'
 };
 
+// The routing engine's profile ids, as the model should describe them.
+const PROFILE_LABELS = { none: 'general', wheelchair: 'wheelchair', walking_aid: 'walking aid', low_vision: 'low vision' };
+
 function invalid(message) {
   return { error: 'invalid_input', message };
 }
@@ -40,6 +43,7 @@ async function findPlace(input, ctx) {
       name: place.name,
       building: place.building,
       floor: place.floor,
+      type: place.type || null,
       confidence
     }))
   };
@@ -141,7 +145,20 @@ async function getTravelTime(input, ctx) {
   const minutes = Math.max(1, Math.ceil(route.estimated_seconds / 60));
 
   ctx.travelTime = { minutes, basis: 'estimate', distance_m: route.distance_m };
-  return { minutes, basis: 'estimate', speed_multiplier: ctx.speedMultiplier || 1 };
+  // The engine timed this route with the mobility profile from the user's
+  // settings, not with whatever profile the model passed in. Say which, so the
+  // model never presents a general-pace estimate as a wheelchair estimate.
+  const profileUsed = PROFILE_LABELS[ctx.routeOptions?.mobilityProfile] || 'general';
+  return {
+    minutes,
+    basis: 'estimate',
+    speed_multiplier: ctx.speedMultiplier || 1,
+    profile_used: profileUsed,
+    note:
+      'The time uses the mobility profile in the user\'s settings (profile_used). Do not say it is for a wheelchair, ' +
+      'walking aid or low vision user unless profile_used says so; if it is "general", say the user can pick their ' +
+      'travel mode on the home page for a time that fits them.'
+  };
 }
 
 async function checkPathStatus(input, ctx) {

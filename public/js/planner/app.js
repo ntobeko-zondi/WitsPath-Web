@@ -43,10 +43,12 @@ function placeOption(nodeId, text) {
 }
 
 // Home base and saved places first (like the Android room picker), then every
-// named place. Unnamed junctions ("node" type) are waypoints, not destinations.
+// named place. Junctions ("node") and ramps are waypoints on the way to a
+// building, not destinations, so they aren't listed (routes still use them).
+const WAYPOINT_TYPES = new Set(['node', 'ramp']);
 function buildNodeOptions(nodes) {
   const list = nodes
-    .filter((node) => node && node.label && node.type !== 'node')
+    .filter((node) => node && node.label && !WAYPOINT_TYPES.has(node.type))
     .sort((a, b) => a.label.localeCompare(b.label));
   const names = new Map(list.map((node) => [node.nodeId, node.label.trim()]));
   const settings = window.WitsPathSettings;

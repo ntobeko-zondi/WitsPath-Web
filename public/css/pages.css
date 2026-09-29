@@ -128,6 +128,10 @@
   line-height: 1.5;
 }
 
+.page-status:empty {
+  display: none;
+}
+
 .page-status li:first-child {
   font-size: 1.1rem;
   font-weight: 700;

@@ -222,11 +222,6 @@
     }
     card.appendChild(facts);
 
-    if (route.routingSource === 'placeholder-fixture') {
-      card.appendChild(
-        make('p', 'companion-badge companion-badge-limited', 'Placeholder route data for testing. Not yet from the shared WitsPath routing engine.')
-      );
-    }
     if (route.fallbackToEnglish) {
       card.appendChild(
         make('p', 'companion-badge companion-badge-info', `Some directions are in English because verified ${languageName(route.directionsLang)} wording isn't available yet.`)

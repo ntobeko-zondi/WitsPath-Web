@@ -36,8 +36,28 @@ test('find_place: names, aliases and typos resolve with confidence', async () =>
     const result = await runTool('find_place', { query, accessible_only: false }, ctx);
     assert.equal(result.matches[0]?.id, expected, `query "${query}"`);
     assert.ok(result.matches[0].confidence >= 0.6);
-    assert.deepEqual(Object.keys(result.matches[0]).sort(), ['building', 'confidence', 'floor', 'id', 'name']);
+    assert.deepEqual(Object.keys(result.matches[0]).sort(), ['building', 'confidence', 'floor', 'id', 'name', 'type']);
   }
+});
+
+test('find_place: a ramp is not offered when the user means the building, and vice versa', async () => {
+  const ctx = ctxFor(makeStore());
+  const find = async (query) => (await runTool('find_place', { query, accessible_only: true }, ctx)).matches;
+
+  // "MSB" also matches the MSB ramps through the acronym; the building must lead and no ramp may appear.
+  const msb = await find('MSB');
+  assert.equal(msb[0].id, NODES.msb);
+  assert.equal(msb[0].type, 'entrance');
+  assert.ok(msb.every((match) => match.type !== 'ramp'), 'no ramps expected');
+
+  const library = await find('Commerce Library');
+  assert.deepEqual(library.map((match) => match.id), [NODES.commerceLibrary]);
+
+  // Asking about a ramp (e.g. to report it) returns ramps, not the building.
+  const ramps = await find('ramp at MSB');
+  assert.ok(ramps.length >= 2);
+  assert.ok(ramps.every((match) => match.type === 'ramp'), 'only ramps expected');
+  assert.ok(!ramps.some((match) => match.id === NODES.msb));
 });
 
 test('find_place: accessible_only flags that entrance accessibility is unverified', async () => {
@@ -133,6 +153,21 @@ test('get_travel_time: uses the engine estimate for that exact route', async () 
   assert.equal(estimate.basis, 'estimate');
   assert.equal(estimate.minutes, 2); // engine: 89 s -> rounded up to whole minutes
   assert.equal(estimate.speed_multiplier, 1);
+});
+
+test('get_travel_time: says which mobility profile the estimate used', async () => {
+  const route = { from_node_id: NODES.msbLabs, to_node_id: NODES.genmin, accessible: true };
+  const time = { distance_m: 82, mobility_profile: 'wheelchair' }; // what the model asks for is not what is used
+
+  const general = ctxFor(makeStore());
+  await runTool('get_route', route, general);
+  assert.equal((await runTool('get_travel_time', time, general)).profile_used, 'general');
+
+  const wheelchair = { ...ctxFor(makeStore()), routeOptions: { mobilityProfile: 'wheelchair' } };
+  await runTool('get_route', route, wheelchair);
+  const estimate = await runTool('get_travel_time', time, wheelchair);
+  assert.equal(estimate.profile_used, 'wheelchair');
+  assert.match(estimate.note, /Do not say it is for a wheelchair/);
 });
 
 test('check_path_status: reports issues, and refuses unknown ids instead of saying "clear"', async () => {
