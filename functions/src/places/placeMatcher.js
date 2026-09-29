@@ -87,6 +87,11 @@ function scoreName(query, candidate) {
 /**
  * find_place core. Returns only matches that clear PLACE_MIN_CONFIDENCE; an
  * empty list means "ask the user to clarify", never "pick the closest".
+ *
+ * Ramps are waypoints on a building's approach, not the building itself, and
+ * they share its acronym ("MSB" also matches "MSB - Ramp 1"). So a query that
+ * doesn't say "ramp" prefers real destinations, and one that does prefers
+ * ramps (e.g. "the ramp at MSB is blocked"), whenever both kinds match.
  */
 function matchPlaces(query, places, { accessibleOnly = false } = {}) {
   const scored = [];
@@ -101,8 +106,13 @@ function matchPlaces(query, places, { accessibleOnly = false } = {}) {
     }
   }
 
-  scored.sort((a, b) => b.confidence - a.confidence || a.place.name.localeCompare(b.place.name));
-  return scored.slice(0, PLACE_MAX_MATCHES);
+  const wantsRamp = tokens(query).some((token) => token === 'ramp' || token === 'ramps');
+  const isRamp = ({ place }) => place.type === 'ramp';
+  const preferred = scored.filter((match) => isRamp(match) === wantsRamp);
+  const candidates = preferred.length ? preferred : scored;
+
+  candidates.sort((a, b) => b.confidence - a.confidence || a.place.name.localeCompare(b.place.name));
+  return candidates.slice(0, PLACE_MAX_MATCHES);
 }
 
 module.exports = { matchPlaces, scoreName, normalize };
