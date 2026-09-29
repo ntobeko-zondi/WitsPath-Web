@@ -93,6 +93,8 @@ npm --prefix functions run dev
 
 Open **http://localhost:5173**:
 
+**No API key yet?** Add `COMPANION_MOCK=1` to `functions/.secret.local` and restart. The companion then runs in test mode: a scripted stand-in replaces the model, but every answer still comes from the real tools and routing engine, so you can test the chat, route cards, sharing and voice. It understands only "from X to Y", "how do I get to X" and "where is X", and every reply starts with `[Test mode - no AI]`. It is not used by the deployed function.
+
 | Page | URL |
 |---|---|
 | Main site + AI companion | `/` |

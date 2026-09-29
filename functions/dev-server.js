@@ -122,12 +122,20 @@ async function verifyDevUser(headers) {
   }
 }
 
+// COMPANION_MOCK=1 (functions/.secret.local) swaps the model for a scripted stand-in
+// that needs no API key but still calls the real tools and routing engine, so
+// the chat UI, route cards, sharing and voice can be tested end to end.
+const COMPANION_MOCK = /^(1|true|yes)$/i.test(process.env.COMPANION_MOCK || '');
 let anthropic = null;
 const api = createApi({
   store,
   routing,
   log: (event, data) => console.log(`[companion] ${event}`, JSON.stringify(data)),
   getAnthropic: () => {
+    if (COMPANION_MOCK) {
+      anthropic = anthropic || require('./src/companion/mockModel').createMockAnthropic();
+      return anthropic;
+    }
     if (!process.env.ANTHROPIC_API_KEY) {
       throw new CompanionError('not_configured', 'ANTHROPIC_API_KEY is not set in functions/.secret.local.', 503);
     }
@@ -228,7 +236,11 @@ server.listen(PORT, () => {
         ? `Routing: shared engine at ${config.ROUTING_SERVICE_URL}`
         : 'Routing: unavailable - build the engine with routing/build.ps1 (Windows) or routing/build.sh (JDK 11+ needed)'
   );
-  if (!process.env.ANTHROPIC_API_KEY) console.log('ANTHROPIC_API_KEY not set - companion replies will return 503.');
+  if (COMPANION_MOCK) {
+    console.log('Companion: TEST MODE (COMPANION_MOCK=1) - scripted replies, no AI. Real tools and routing engine.');
+  } else if (!process.env.ANTHROPIC_API_KEY) {
+    console.log('ANTHROPIC_API_KEY not set - companion replies will return 503. Set COMPANION_MOCK=1 in functions/.secret.local to test without a key.');
+  }
   console.log(
     process.env.ADMIN_API_TOKEN
       ? `Campus places admin: http://localhost:${PORT}/admin/`
