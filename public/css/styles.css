@@ -83,6 +83,33 @@ input:focus-visible,
   color: #fff;
 }
 
+/* Compact brand used in the header of the standalone pages (settings, saved
+   places, live trip, shared route...). The home page uses .university-brand. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1.5px solid rgba(233, 243, 255, .75);
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.brand-copy { display: grid; gap: 2px; line-height: 1.15; }
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: .01em; }
+.brand-sub { font-size: 13px; color: #cfe0f7; }
+
 .university-brand {
   display: flex;
   flex: 0 0 160px;

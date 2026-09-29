@@ -8,21 +8,22 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/themes.css" />
     <link rel="stylesheet" href="/css/companion.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand">
+        <a class="brand" href="/">
           <div class="brand-mark" aria-hidden="true">W</div>
           <div class="brand-copy">
             <span class="brand-name">WitsPath</span>
             <span class="brand-sub">Shared route</span>
           </div>
-        </div>
+        </a>
       </header>
 
-      <main class="layout share-layout">
-        <section class="panel" aria-labelledby="shareTitle">
+      <main class="page-layout single share-layout">
+        <section class="panel page-panel" aria-labelledby="shareTitle">
           <h1 id="shareTitle" class="share-title">Loading route…</h1>
           <p id="shareStatus" role="status" aria-live="polite"></p>
           <div id="shareCard" hidden>
@@ -43,11 +44,17 @@
     <style>
       .share-layout {
         grid-template-columns: minmax(0, 720px);
-        justify-content: center;
       }
-      .share-title {
-        margin: 0 0 0.75rem;
-        font-size: 1.4rem;
+      #shareStatus:empty {
+        display: none;
+      }
+      #shareCard:not([hidden]) {
+        display: grid;
+        gap: 0.75rem;
+      }
+      #shareCard p,
+      #shareCard ol {
+        margin: 0;
       }
       .share-link-button {
         display: inline-flex;
