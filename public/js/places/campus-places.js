@@ -14,7 +14,7 @@
         })
         .then((graph) =>
           graph.nodes
-            .filter((node) => node.label && node.type !== 'node')
+            .filter((node) => node.label && node.type !== 'node' && node.type !== 'ramp') // waypoints, not destinations
             .map((node) => ({ nodeId: node.nodeId, name: node.label.replace(/\s+/g, ' ').trim() }))
             .sort((a, b) => a.name.localeCompare(b.name))
         );

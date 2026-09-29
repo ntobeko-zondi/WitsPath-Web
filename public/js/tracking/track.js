@@ -71,6 +71,9 @@
       title.textContent = 'Trip not found';
       status.replaceChildren();
       errorLine.textContent = 'This link is not valid, or the trip was removed.';
+      // Nothing to show on the map, so don't leave an empty map box.
+      const mapPanel = mapContainer.closest('section');
+      if (mapPanel) mapPanel.hidden = true;
       return;
     }
     if (!response.ok) {
