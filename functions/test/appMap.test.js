@@ -64,10 +64,32 @@ test('"Commerce building" finds the Commerce, Law & Management entrance', () => 
   }
 });
 
-test('"Commerce Library" is never answered with its parking bay', () => {
-  // There is no Commerce Library entrance on this map. A parking bay is not the library, so nothing is offered
-  // and the companion has to ask.
-  assert.ok(!ids(find('Commerce Library')).includes(COMMERCE_LIBRARY_PARKING));
+test('"Commerce Library" has no entrance on the map, so its parking bay is used instead of nothing', () => {
+  const matches = find('Commerce Library');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].place.id, COMMERCE_LIBRARY_PARKING);
+  assert.equal(matches[0].noEntranceMapped, true, 'flagged so the companion can say it is the closest mapped point');
+});
+
+test('a parking bay is NOT used when its building has an entrance', () => {
+  // Wits Plus has entrances, so its parking bay stays out of the way unless the user asks for parking.
+  const matches = find('Wits Plus');
+  assert.ok(!ids(matches).includes(WITS_PLUS_PARKING));
+  assert.ok(matches.every((match) => !match.noEntranceMapped));
+  // A loose fit is not enough: "commerce" is only part of the library's name.
+  assert.ok(!ids(find('Commerce')).includes(COMMERCE_LIBRARY_PARKING));
+  assert.ok(!ids(find('Commerce building')).includes(COMMERCE_LIBRARY_PARKING));
+});
+
+test('searches work in lower, upper and mixed case, with extra spaces and punctuation', () => {
+  const queries = ['Wits Plus', 'Commerce building', 'Commerce Library', 'Wartenweiler Library stairs', 'Wits Plus disabled parking', 'William Cullen Library'];
+  for (const query of queries) {
+    const expected = JSON.stringify(find(query).map((match) => [match.place.id, match.confidence]));
+    assert.notEqual(expected, '[]', `${query} should find something`);
+    for (const variant of [query.toLowerCase(), query.toUpperCase(), `  ${query.toLowerCase()}  `, query.toLowerCase().replace(/ /g, '   '), `${query.toLowerCase()}?`]) {
+      assert.equal(JSON.stringify(find(variant).map((match) => [match.place.id, match.confidence])), expected, JSON.stringify(variant));
+    }
+  }
 });
 
 test('parking, stairs and gates are found when the user asks for them', () => {
@@ -84,6 +106,18 @@ test('ordinary names still find their building, and nonsense finds nothing', () 
   assert.equal(find('William Cullen Library')[0]?.place.name.startsWith('William Cullen Library'), true);
   assert.deepEqual(find('nearest ATM'), []);
   assert.deepEqual(find('zzzzzz qqqq'), []);
+});
+
+test('find_place flags a parking bay that stands in for a missing entrance', async () => {
+  const ctx = { store, routing: null, groundedRoutes: [], speedMultiplier: 1 };
+  for (const query of ['commerce library', 'Commerce Library']) {
+    const result = await runTool('find_place', { query, accessible_only: true }, ctx);
+    assert.equal(result.matches.length, 1);
+    assert.equal(result.matches[0].id, COMMERCE_LIBRARY_PARKING);
+    assert.equal(result.matches[0].no_entrance_mapped, true);
+  }
+  const wits = await runTool('find_place', { query: 'wits plus', accessible_only: true }, ctx);
+  assert.equal(wits.matches[0].no_entrance_mapped, undefined);
 });
 
 test('a stairs place is never a default destination', () => {

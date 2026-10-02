@@ -93,6 +93,10 @@ const KIND_WORDS = {
 };
 const HIDDEN_UNLESS_ASKED = new Set(Object.keys(KIND_WORDS));
 
+// A parking bay stands in for a building that has NO entrance on the map, when the query names that building
+// closely ("Commerce Library" for "Commerce Library - disabled parking"). Better than returning nothing.
+const STAND_IN_MIN_SCORE = 0.9;
+
 // A query that fits inside a building's own name ("commerce" for "Commerce, Law & Management") finds that building.
 const CONTAINED_SCORE = 0.7;
 
@@ -176,7 +180,18 @@ function matchPlaces(query, places, { accessibleOnly = false } = {}) {
   }
 
   const asked = askedKinds(query);
-  const offered = scored.filter(({ place }) => !HIDDEN_UNLESS_ASKED.has(kindOf(place)) || asked.has(kindOf(place)));
+  const buildingsWithEntrance = new Set(
+    places.filter((place) => kindOf(place) === 'entrance' && place.building).map((place) => place.building.toLowerCase())
+  );
+  // A parking bay is offered, and flagged, when its building has no entrance and the name matches closely.
+  const standsInForEntrance = ({ place, confidence }) =>
+    kindOf(place) === 'parking' &&
+    !asked.has('parking') &&
+    confidence >= STAND_IN_MIN_SCORE &&
+    !buildingsWithEntrance.has(String(place.building || '').toLowerCase());
+  const offered = scored
+    .filter((match) => !HIDDEN_UNLESS_ASKED.has(kindOf(match.place)) || asked.has(kindOf(match.place)) || standsInForEntrance(match))
+    .map((match) => (standsInForEntrance(match) ? { ...match, noEntranceMapped: true } : match));
 
   const wantsRamp = tokens(query).some((token) => token === 'ramp' || token === 'ramps');
   const isRamp = ({ place }) => place.type === 'ramp';
