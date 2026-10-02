@@ -84,6 +84,76 @@ function scoreName(query, candidate) {
   return Math.round(0.95 * f1 * 1000) / 1000;
 }
 
+// Things that are not where someone is going unless they say so: a parking bay, a staircase, a vehicle gate.
+// "Commerce Library" must not become "Commerce Library - disabled parking".
+const KIND_WORDS = {
+  parking: ['parking', 'park'],
+  stairs: ['stairs', 'stair', 'staircase', 'steps'],
+  gate: ['gate', 'gates']
+};
+const HIDDEN_UNLESS_ASKED = new Set(Object.keys(KIND_WORDS));
+
+// A query that fits inside a building's own name ("commerce" for "Commerce, Law & Management") finds that building.
+const CONTAINED_SCORE = 0.7;
+
+function askedKinds(query) {
+  const asked = new Set();
+  const queryTokens = tokens(query);
+  for (const [kind, words] of Object.entries(KIND_WORDS)) {
+    if (queryTokens.some((token) => words.includes(token))) asked.add(kind);
+  }
+  return asked;
+}
+
+function kindOf(place) {
+  return place.kind || place.type;
+}
+
+function scorePlace(query, place) {
+  const names = [place.name, ...(place.aliases || [])];
+  let best = Math.max(...names.map((name) => scoreName(query, name)));
+
+  // Only for labels like "Building - accessible entrance"; a bare number ("School of Business Sciences - 2")
+  // is a second copy of the same name and keeps being scored on its full name.
+  if (place.building && place.building !== place.name && /[a-z]/i.test(place.detail || '')) {
+    best = Math.max(best, scoreName(query, place.building));
+    const queryTokens = tokens(query);
+    const buildingTokens = tokens(place.building);
+    if (queryTokens.length && queryTokens.every((q) => buildingTokens.some((b) => tokensMatch(q, b)))) {
+      best = Math.max(best, CONTAINED_SCORE);
+    }
+  }
+  return best;
+}
+
+/**
+ * "Wits Plus - accessible entrance 1" and "... entrance 2" are the same kind of door into the same building.
+ * Offer one, and list the others, so a newcomer is not asked to choose between identical doors.
+ */
+function collapseNumberedDuplicates(matches) {
+  const kept = [];
+  const byKey = new Map();
+  for (const match of matches) {
+    const place = match.place;
+    const detail = String(place.detail || '').replace(/\d+/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    // Only doors: two ramps or two staircases are different things, and a report must name the right one.
+    if (kindOf(place) !== 'entrance' || !place.building || !/[a-z]/.test(detail)) {
+      kept.push(match);
+      continue;
+    }
+    const key = [place.building.toLowerCase(), kindOf(place), detail].join('|');
+    const first = byKey.get(key);
+    if (first) {
+      first.alternates.push(place);
+    } else {
+      const entry = { ...match, alternates: [] };
+      byKey.set(key, entry);
+      kept.push(entry);
+    }
+  }
+  return kept;
+}
+
 /**
  * find_place core. Returns only matches that clear PLACE_MIN_CONFIDENCE; an
  * empty list means "ask the user to clarify", never "pick the closest".
@@ -99,20 +169,22 @@ function matchPlaces(query, places, { accessibleOnly = false } = {}) {
     if (accessibleOnly && place.accessibleEntrance === false) {
       continue;
     }
-    const names = [place.name, ...(place.aliases || [])];
-    const confidence = Math.max(...names.map((name) => scoreName(query, name)));
+    const confidence = scorePlace(query, place);
     if (confidence >= PLACE_MIN_CONFIDENCE) {
       scored.push({ place, confidence });
     }
   }
 
+  const asked = askedKinds(query);
+  const offered = scored.filter(({ place }) => !HIDDEN_UNLESS_ASKED.has(kindOf(place)) || asked.has(kindOf(place)));
+
   const wantsRamp = tokens(query).some((token) => token === 'ramp' || token === 'ramps');
   const isRamp = ({ place }) => place.type === 'ramp';
-  const preferred = scored.filter((match) => isRamp(match) === wantsRamp);
-  const candidates = preferred.length ? preferred : scored;
+  const preferred = offered.filter((match) => isRamp(match) === wantsRamp);
+  const candidates = preferred.length ? preferred : offered;
 
   candidates.sort((a, b) => b.confidence - a.confidence || a.place.name.localeCompare(b.place.name));
-  return candidates.slice(0, PLACE_MAX_MATCHES);
+  return collapseNumberedDuplicates(candidates).slice(0, PLACE_MAX_MATCHES);
 }
 
-module.exports = { matchPlaces, scoreName, normalize };
+module.exports = { matchPlaces, scoreName, scorePlace, normalize };
