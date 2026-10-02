@@ -38,13 +38,17 @@ async function findPlace(input, ctx) {
   const places = await ctx.store.getPlaces();
   const matches = matchPlaces(input.query, places, { accessibleOnly: input.accessible_only });
   const result = {
-    matches: matches.map(({ place, confidence }) => ({
+    matches: matches.map(({ place, confidence, alternates, noEntranceMapped }) => ({
       id: place.id,
       name: place.name,
       building: place.building,
       floor: place.floor,
       type: place.type || null,
-      confidence
+      confidence,
+      // Identical doors into the same building. Use this one; do not ask the user to pick.
+      ...(alternates && alternates.length ? { other_entrance_ids: alternates.map((other) => other.id) } : {}),
+      // The map has no entrance for this building, so this parking bay is the closest mapped point. Say so plainly.
+      ...(noEntranceMapped ? { no_entrance_mapped: true } : {})
     }))
   };
   if (input.accessible_only) {

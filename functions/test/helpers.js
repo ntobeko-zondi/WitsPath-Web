@@ -2,6 +2,8 @@
 
 const { MemoryStore } = require('../src/store/memoryStore');
 const { loadSeedData } = require('../src/store/seedData');
+
+const WEST_CAMPUS_MAP = 'public/data/wits-west-map.json';
 const { createRoutingService } = require('../src/routing/routingService');
 
 // Node ids from public/data/wits-west-map.json.
@@ -17,7 +19,8 @@ const NODES = {
 };
 
 function makeStore() {
-  return new MemoryStore(loadSeedData());
+  // These tests use fixed ids from the original West Campus map, so they pin that file.
+  return new MemoryStore(loadSeedData({ graphFile: WEST_CAMPUS_MAP }));
 }
 
 /**

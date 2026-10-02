@@ -119,6 +119,7 @@ npm --prefix functions test
 
 ### Things to know
 
+- The companion uses the Android app's map. By default the backend loads `public/data/wits-braamfontein-map.json`, a copy of `app/src/main/assets/graph_data.json` from the Android repository. Route cards carry this map's place ids, so when the app's map changes, copy the new file here (or point `GRAPH_FILE` at it, relative to the repo root) and restart. The older `public/data/wits-west-map.json` is still what the website's own planner uses. Run `node functions/scripts/seed-firestore.js` again after changing the map if you seed Firestore.
 - **Data is per computer.** The dev server keeps chats, share links and trips in memory, and they disappear on restart. Pinned campus places are saved to `functions/.dev-data/campus-places.json` on your machine only. To share pins, send that file to teammates (same folder) until the shared Firebase project exists.
 - **Routes come from the shared engine.** The dev server starts `routing/build/witspath-routing.jar` automatically on port 8081. If you haven't built it, routes answer "unavailable". Rebuild after changing anything in `routing/`.
 - **Testing on a phone needs HTTPS.** Browsers only allow GPS and the microphone on `localhost` or HTTPS. On a phone, `http://<laptop-IP>:5173` loads, but live trips and voice won't work. Use an HTTPS tunnel instead, e.g. `cloudflared tunnel --url http://localhost:5173` or ngrok, and open the address it prints.
